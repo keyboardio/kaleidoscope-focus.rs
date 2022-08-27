@@ -23,7 +23,13 @@ use std::time::Duration;
 #[derive(Parser)]
 #[clap(version)]
 struct Cli {
-    #[clap(short = 'd', value_name = "PATH", default_value = "/dev/ttyACM0")]
+    #[clap(
+        short = 'd',
+        long = "device",
+        env = "DEVICE",
+        value_name = "PATH",
+        default_value = "/dev/ttyACM0"
+    )]
     device: String,
 
     command: String,
