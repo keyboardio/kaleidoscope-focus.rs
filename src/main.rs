@@ -20,6 +20,13 @@ use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
+#[cfg(target_family = "unix")]
+static DEFAULT_DEVICE: &'static str = "/dev/ttyACM0";
+#[cfg(target = "macos")]
+static DEFAULT_DEVICE: &'static str = "/dev/cu.usbmodemCkbio01E";
+#[cfg(target_family = "windows")]
+static DEFAULT_DEVICE: &'static str = "COM1";
+
 #[derive(Parser)]
 #[clap(version)]
 struct Cli {
@@ -28,7 +35,8 @@ struct Cli {
         long = "device",
         env = "DEVICE",
         value_name = "PATH",
-        default_value = "/dev/ttyACM0"
+        help = "The device to connect to",
+        default_value = DEFAULT_DEVICE,
     )]
     device: String,
 
