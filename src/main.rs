@@ -21,7 +21,7 @@ use std::thread;
 use std::time::Duration;
 
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
+#[clap(version)]
 struct Cli {
     #[clap(short = 'd', value_name = "PATH", default_value = "/dev/ttyACM0")]
     device: String,
