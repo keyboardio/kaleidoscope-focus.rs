@@ -15,10 +15,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use clap::Parser;
+use serialport::SerialPort;
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
-use serialport::SerialPort;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -27,7 +27,7 @@ struct Cli {
     device: String,
 
     command: String,
-    args: Vec<String>
+    args: Vec<String>,
 }
 
 fn main() {
@@ -72,10 +72,10 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
         match port.read(buffer.as_mut_slice()) {
             Ok(t) => {
                 result = result + &String::from_utf8_lossy(&buffer[..t]);
-            },
+            }
             Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
                 break;
-            },
+            }
             Err(e) => {
                 eprintln!("{:?}", e);
                 std::process::exit(1);
