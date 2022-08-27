@@ -18,6 +18,7 @@ use clap::Parser;
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
+use serialport::SerialPort;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -39,22 +40,29 @@ fn main() {
             ::std::process::exit(1);
         });
 
-    // Write the request
-    let mut request_parts = vec![opts.command];
-    request_parts.extend(opts.args);
+    send_request(&mut port, opts.command, opts.args);
+    wait_for_data(&port);
+    read_reply(&mut port);
+}
+
+fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>) {
+    let mut request_parts = vec![command];
+    request_parts.extend(args);
     let request = request_parts.join(" ") + "\n";
 
     port.write_all(request.as_bytes()).unwrap_or_else(|e| {
         eprintln!("{:?}", e);
         ::std::process::exit(1);
     });
+}
 
-    // Wait until we have something to read
+fn wait_for_data(port: &Box<dyn SerialPort>) {
     while port.bytes_to_read().expect("Error calling bytes_to_read") == 0 {
         thread::sleep(Duration::from_millis(100));
     }
+}
 
-    // Read reply
+fn read_reply(port: &mut Box<dyn SerialPort>) {
     let mut buffer: Vec<u8> = vec![0; 1024];
     loop {
         match port.read(buffer.as_mut_slice()) {
