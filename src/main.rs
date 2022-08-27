@@ -41,8 +41,11 @@ fn main() {
         });
 
     send_request(&mut port, opts.command, opts.args);
+
     wait_for_data(&port);
-    read_reply(&mut port);
+
+    let reply = read_reply(&mut port);
+    println!("{}", reply);
 }
 
 fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>) {
@@ -62,12 +65,13 @@ fn wait_for_data(port: &Box<dyn SerialPort>) {
     }
 }
 
-fn read_reply(port: &mut Box<dyn SerialPort>) {
+fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
     let mut buffer: Vec<u8> = vec![0; 1024];
+    let mut result: String = String::from("");
     loop {
         match port.read(buffer.as_mut_slice()) {
             Ok(t) => {
-                io::stdout().write_all(&buffer[..t]).unwrap();
+                result = result + &String::from_utf8_lossy(&buffer[..t]).to_string();
             },
             Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
                 break;
@@ -80,4 +84,5 @@ fn read_reply(port: &mut Box<dyn SerialPort>) {
 
         thread::sleep(Duration::from_millis(100));
     }
+    result
 }
