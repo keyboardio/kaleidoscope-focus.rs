@@ -34,6 +34,7 @@ struct Cli {
         short = 'd',
         long = "device",
         env = "DEVICE",
+        hide_env = true,
         value_name = "PATH",
         help = "The device to connect to",
         default_value = DEFAULT_DEVICE,
