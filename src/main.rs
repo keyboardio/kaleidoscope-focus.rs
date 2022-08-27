@@ -42,7 +42,7 @@ fn main() {
 
     send_request(&mut port, opts.command, opts.args);
 
-    wait_for_data(&port);
+    wait_for_data(&*port);
 
     let reply = read_reply(&mut port);
     println!("{}", cleanup_reply(reply));
@@ -59,7 +59,7 @@ fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<Strin
     });
 }
 
-fn wait_for_data(port: &Box<dyn SerialPort>) {
+fn wait_for_data(port: &dyn SerialPort) {
     while port.bytes_to_read().expect("Error calling bytes_to_read") == 0 {
         thread::sleep(Duration::from_millis(100));
     }
@@ -71,7 +71,7 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
     loop {
         match port.read(buffer.as_mut_slice()) {
             Ok(t) => {
-                result = result + &String::from_utf8_lossy(&buffer[..t]).to_string();
+                result = result + &String::from_utf8_lossy(&buffer[..t]);
             },
             Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
                 break;
@@ -88,13 +88,13 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
 }
 
 fn cleanup_reply(reply: String) -> String {
-    let mut lines: Vec<&str> = reply.split("\n").collect();
+    let mut lines: Vec<&str> = reply.split('\n').collect();
     for line in &mut lines {
         *line = line.trim_end();
     }
     let mut i = 0;
     while i < lines.len() {
-        if lines[i].to_string() == "." || lines[i].to_string() == "" {
+        if lines[i] == "." || lines[i].is_empty() {
             lines.remove(i);
         } else {
             i += 1;
