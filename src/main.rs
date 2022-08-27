@@ -21,11 +21,11 @@ use std::thread;
 use std::time::Duration;
 
 #[cfg(target_family = "unix")]
-static DEFAULT_DEVICE: &'static str = "/dev/ttyACM0";
+static DEFAULT_DEVICE: &str = "/dev/ttyACM0";
 #[cfg(target = "macos")]
-static DEFAULT_DEVICE: &'static str = "/dev/cu.usbmodemCkbio01E";
+static DEFAULT_DEVICE: &str = "/dev/cu.usbmodemCkbio01E";
 #[cfg(target_family = "windows")]
-static DEFAULT_DEVICE: &'static str = "COM1";
+static DEFAULT_DEVICE: &str = "COM1";
 
 #[derive(Parser)]
 #[clap(version)]
