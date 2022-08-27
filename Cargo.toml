@@ -1,0 +1,11 @@
+[package]
+name = "focus-send"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serialport = "4.2.0"
+
+[dependencies.clap]
+version = "3.2.17"
+features = ["derive"]
