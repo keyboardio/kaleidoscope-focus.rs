@@ -1,0 +1,32 @@
+kind: pipeline
+name: meta-data
+
+steps:
+  - name: dco
+    image: algernon/drone-plugin-dco
+    depends_on: [ clone ]
+
+---
+kind: pipeline
+name: lint
+
+steps:
+  - name: clippy
+    image: rust:1
+    commands:
+      - apt-get update
+      - apt-get install -y libudev-dev
+      - rustup component add clippy
+      - cargo clippy
+
+---
+kind: pipeline
+name: build
+
+steps:
+  - name: build:linux
+    image: rust:1
+    commands:
+      - apt-get update
+      - apt-get install -y libudev-dev
+      - cargo build -r
