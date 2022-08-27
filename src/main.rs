@@ -45,7 +45,7 @@ fn main() {
     wait_for_data(&port);
 
     let reply = read_reply(&mut port);
-    println!("{}", reply);
+    println!("{}", cleanup_reply(reply));
 }
 
 fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>) {
@@ -85,4 +85,20 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
         thread::sleep(Duration::from_millis(100));
     }
     result
+}
+
+fn cleanup_reply(reply: String) -> String {
+    let mut lines: Vec<&str> = reply.split("\n").collect();
+    for line in &mut lines {
+        *line = line.trim_end();
+    }
+    let mut i = 0;
+    while i < lines.len() {
+        if lines[i].to_string() == "." || lines[i].to_string() == "" {
+            lines.remove(i);
+        } else {
+            i += 1;
+        }
+    }
+    lines.join("\r\n")
 }
