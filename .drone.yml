@@ -11,6 +11,6 @@ steps:
     commands:
       - rustup component add clippy rustfmt
       - cargo clippy
-      - rustfmt --check src/*.rs
+      - cargo fmt --check
       - cargo build -r
       - cargo test
