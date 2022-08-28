@@ -68,8 +68,7 @@ fn main() {
 // Send an empty command, and consume any replies. This should clear any pending
 // commands or output.
 fn flush(port: &mut Box<dyn SerialPort>) {
-    send_request(port, String::from(" "), vec![])
-        .expect("failed to send an empty command");
+    send_request(port, String::from(" "), vec![]).expect("failed to send an empty command");
     wait_for_data(&**port);
     read_reply(port).expect("failed to flush the device");
 }
