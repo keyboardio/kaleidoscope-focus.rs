@@ -20,9 +20,9 @@ use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
-#[cfg(target_family = "unix")]
+#[cfg(all(target_family = "unix", not(target_os = "macos")))]
 const DEFAULT_DEVICE: &str = "/dev/ttyACM0";
-#[cfg(target = "macos")]
+#[cfg(target_os = "macos")]
 const DEFAULT_DEVICE: &str = "/dev/cu.usbmodemCkbio01E";
 #[cfg(target_family = "windows")]
 const DEFAULT_DEVICE: &str = "COM1";
