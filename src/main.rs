@@ -114,10 +114,7 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> Result<String, std::io::Error> 
 }
 
 fn cleanup_reply(reply: String) -> String {
-    let mut lines: Vec<&str> = reply.split('\n').collect();
-    for line in &mut lines {
-        *line = line.trim_end();
-    }
+    let mut lines: Vec<&str> = reply.lines().collect();
     let mut i = 0;
     while i < lines.len() {
         if lines[i] == "." || lines[i].is_empty() {
