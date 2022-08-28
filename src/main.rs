@@ -62,7 +62,7 @@ fn main() {
 
     let reply = read_reply(&mut port)
         .expect("failed to read the reply");
-    println!("{}", cleanup_reply(reply));
+    println!("{}", reply);
 }
 
 fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>)
@@ -99,7 +99,7 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> Result<String, std::io::Error> 
         thread::sleep(Duration::from_millis(100));
     }
 
-    Ok(result)
+    Ok(cleanup_reply(result))
 }
 
 fn cleanup_reply(reply: String) -> String {
