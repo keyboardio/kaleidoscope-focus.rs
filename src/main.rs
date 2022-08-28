@@ -54,6 +54,8 @@ fn main() {
             ::std::process::exit(1);
         });
 
+    flush(&mut port);
+
     send_request(&mut port, opts.command, opts.args)
         .expect("failed to send the request to the keyboard");
 
@@ -61,6 +63,15 @@ fn main() {
 
     let reply = read_reply(&mut port).expect("failed to read the reply");
     println!("{}", reply);
+}
+
+// Send an empty command, and consume any replies. This should clear any pending
+// commands or output.
+fn flush(port: &mut Box<dyn SerialPort>) {
+    send_request(port, String::from(" "), vec![])
+        .expect("failed to send an empty command");
+    wait_for_data(&**port);
+    read_reply(port).expect("failed to flush the device");
 }
 
 fn send_request(
