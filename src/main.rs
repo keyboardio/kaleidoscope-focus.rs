@@ -118,3 +118,14 @@ fn cleanup_reply(reply: String) -> String {
         .collect::<Vec<&str>>()
         .join("\n")
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn cleanup_reply() {
+        assert_eq!(
+            super::cleanup_reply(String::from("line1\nline2\r\nline3")),
+            "line1\nline2\nline3"
+        );
+    }
+}

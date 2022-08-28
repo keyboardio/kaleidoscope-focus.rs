@@ -13,3 +13,4 @@ steps:
       - cargo clippy
       - rustfmt --check src/*.rs
       - cargo build -r
+      - cargo test
