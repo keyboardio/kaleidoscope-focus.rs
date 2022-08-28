@@ -30,9 +30,9 @@ const DEFAULT_DEVICE: &str = "COM1";
 #[clap(version, about)]
 struct Cli {
     #[clap(
-        short = 'd',
-        long = "device",
-        env = "DEVICE",
+        short,
+        long,
+        env,
         hide_env = true,
         value_name = "PATH",
         help = "The device to connect to",
