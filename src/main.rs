@@ -115,5 +115,5 @@ fn cleanup_reply(reply: String) -> String {
             i += 1;
         }
     }
-    lines.join("\r\n")
+    lines.join("\n")
 }
