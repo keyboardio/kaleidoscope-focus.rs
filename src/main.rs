@@ -55,23 +55,23 @@ fn main() {
             ::std::process::exit(1);
         });
 
-    send_request(&mut port, opts.command, opts.args);
+    send_request(&mut port, opts.command, opts.args)
+        .expect("failed to send the request to the keyboard");
 
     wait_for_data(&*port);
 
-    let reply = read_reply(&mut port);
+    let reply = read_reply(&mut port)
+        .expect("failed to read the reply");
     println!("{}", cleanup_reply(reply));
 }
 
-fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>) {
+fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>)
+                -> Result<(), std::io::Error> {
     let mut request_parts = vec![command];
     request_parts.extend(args);
     let request = request_parts.join(" ") + "\n";
 
-    port.write_all(request.as_bytes()).unwrap_or_else(|e| {
-        eprintln!("{:?}", e);
-        ::std::process::exit(1);
-    });
+    port.write_all(request.as_bytes())
 }
 
 fn wait_for_data(port: &dyn SerialPort) {
@@ -80,7 +80,7 @@ fn wait_for_data(port: &dyn SerialPort) {
     }
 }
 
-fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
+fn read_reply(port: &mut Box<dyn SerialPort>) -> Result<String, std::io::Error> {
     let mut buffer: Vec<u8> = vec![0; 1024];
     let mut result: String = String::from("");
     loop {
@@ -92,14 +92,14 @@ fn read_reply(port: &mut Box<dyn SerialPort>) -> String {
                 break;
             }
             Err(e) => {
-                eprintln!("{:?}", e);
-                std::process::exit(1);
+                return Err(e);
             }
         }
 
         thread::sleep(Duration::from_millis(100));
     }
-    result
+
+    Ok(result)
 }
 
 fn cleanup_reply(reply: String) -> String {
