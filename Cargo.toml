@@ -8,4 +8,5 @@ serialport = "4.2.0"
 
 [dependencies.clap]
 version = "3.2.17"
-features = ["derive", "env"]
+default_features = false
+features = ["std", "derive", "env"]
