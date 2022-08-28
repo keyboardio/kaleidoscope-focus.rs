@@ -78,9 +78,7 @@ fn send_request(
     command: String,
     args: Vec<String>,
 ) -> Result<(), std::io::Error> {
-    let mut request_parts = vec![command];
-    request_parts.extend(args);
-    let request = request_parts.join(" ") + "\n";
+    let request = [vec![command], args].concat().join(" ") + "\n";
 
     port.write_all(request.as_bytes())
 }
