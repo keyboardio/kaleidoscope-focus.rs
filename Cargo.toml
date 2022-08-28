@@ -18,3 +18,4 @@ features = ["std", "derive", "env"]
 [profile.release]
 strip = true
 panic = "abort"
+lto = true
