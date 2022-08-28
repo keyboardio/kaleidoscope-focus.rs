@@ -60,13 +60,15 @@ fn main() {
 
     wait_for_data(&*port);
 
-    let reply = read_reply(&mut port)
-        .expect("failed to read the reply");
+    let reply = read_reply(&mut port).expect("failed to read the reply");
     println!("{}", reply);
 }
 
-fn send_request(port: &mut Box<dyn SerialPort>, command: String, args: Vec<String>)
-                -> Result<(), std::io::Error> {
+fn send_request(
+    port: &mut Box<dyn SerialPort>,
+    command: String,
+    args: Vec<String>,
+) -> Result<(), std::io::Error> {
     let mut request_parts = vec![command];
     request_parts.extend(args);
     let request = request_parts.join(" ") + "\n";
