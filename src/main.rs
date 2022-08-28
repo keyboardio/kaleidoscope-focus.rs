@@ -27,7 +27,7 @@ const DEFAULT_DEVICE: &str = "/dev/cu.usbmodemCkbio01E";
 const DEFAULT_DEVICE: &str = "COM1";
 
 #[derive(Parser)]
-#[clap(version)]
+#[clap(version, about)]
 struct Cli {
     #[clap(
         short = 'd',
