@@ -1,0 +1,27 @@
+name: focus-send.rs
+
+on:
+  - push
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Clippy
+        run: cargo clippy
+
+      - name: Format check
+        run: cargo fmt --check
+
+      - name: Test
+        run: cargo test
+
+      - name: Build
+        run: cargo build -r
