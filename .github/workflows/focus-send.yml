@@ -1,30 +1,151 @@
 name: focus-send.rs
 
 on:
-  - push
+  push:
+    branches:
+      - main
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install the rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: clippy, rustfmt
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+
+      - name: Format check
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check
+
   build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Install Rust (Linux)
+        if: runner.os == 'Linux'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: x86_64-unknown-linux-musl
+
+      - name: Install Rust (macOS/Windows)
+        if: runner.os != 'Linux'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - name: Prepare compressed binary (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          xz -c target/release/focus-send \
+                > target/release/focus-send.linux_amd64.xz
+
+      - name: Prepare compressed binary (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          xz -c target/release/focus-send \
+                > target/release/focus-send.macOS_amd64.xz
+
+      - name: Prepare compressed binary (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          xz -c target/release/focus-send.exe \
+                > target/release/focus-send.exe.windows_amd64.xz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ runner.os }}-artifact
+          path: |
+            target/release/*.xz
+
+  publish:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      - name: Discover the version tag
+        id: version
+        run: echo ::set-output name=version::$(cargo pkgid | cut -d# -f2)
 
-      - name: Clippy
-        run: cargo clippy
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
 
-      - name: Format check
-        run: cargo fmt --check
+      - name: Delete the snapshot release
+        if: ${{ contains(steps.version.outputs.version, 'snapshot') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+          TAG: v${{steps.version.outputs.version}}
+        shell: bash
+        run: |
+          gh release delete -y ${TAG} || true
+          git tag -d ${TAG} || true
+          git push origin :${TAG} || true
 
-      - name: Test
-        run: cargo test
+      - name: Recreate the snapshot release
+        if: ${{ contains(steps.version.outputs.version, 'snapshot') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+          VERSION: ${{steps.version.outputs.version}}
+        shell: bash
+        run: |
+          gh release create -p -t "focus-send ${VERSION}" \
+                            -n "Development snapshot." \
+                            v${VERSION}
 
-      - name: Build
-        run: cargo build -r
+      - name: Upload artifacts to the release
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+          TAG: v${{steps.version.outputs.version}}
+        shell: bash
+        run: |
+          gh release upload ${TAG} artifacts/*/*.xz
