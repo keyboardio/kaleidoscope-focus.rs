@@ -11,9 +11,9 @@ rust-version = "1.59.0"
 version = "4.2.0"
 
 [dependencies.clap]
-version = "3.2.17"
+version = "4.0.0-rc.2"
 default_features = false
-features = ["std", "derive", "env"]
+features = ["std", "derive", "env", "help", "usage"]
 
 [profile.release]
 strip = true

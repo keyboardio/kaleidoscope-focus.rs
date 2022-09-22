@@ -20,9 +20,9 @@ use std::thread;
 use std::time::Duration;
 
 #[derive(Parser)]
-#[clap(version, about)]
+#[command(version, about)]
 struct Cli {
-    #[clap(
+    #[arg(
         short,
         long,
         env,
