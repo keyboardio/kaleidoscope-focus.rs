@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use clap::Parser;
+use indicatif::ProgressBar;
 use serialport::SerialPort;
 use std::io::{self, Write};
 use std::thread;
@@ -31,6 +32,8 @@ struct Cli {
         help = "The device to connect to"
     )]
     device: Option<String>,
+    #[arg(short, long, help = "Operate quietly", default_value = "false")]
+    quiet: bool,
 
     command: String,
     args: Vec<String>,
@@ -53,7 +56,7 @@ fn main() {
 
     flush(&mut port);
 
-    send_request(&mut port, opts.command, opts.args)
+    send_request(&mut port, !opts.quiet, opts.command, opts.args)
         .expect("failed to send the request to the keyboard");
 
     wait_for_data(&*port);
@@ -120,20 +123,38 @@ impl Cli {
 // Send an empty command, and consume any replies. This should clear any pending
 // commands or output.
 fn flush(port: &mut Box<dyn SerialPort>) {
-    send_request(port, String::from(" "), vec![]).expect("failed to send an empty command");
+    send_request(port, false, String::from(" "), vec![]).expect("failed to send an empty command");
     wait_for_data(&**port);
     read_reply(port).expect("failed to flush the device");
 }
 
 fn send_request(
     port: &mut Box<dyn SerialPort>,
+    with_progress: bool,
     command: String,
     args: Vec<String>,
 ) -> Result<(), std::io::Error> {
-    let request = [vec![command], args].concat().join(" ") + "\n";
-
     port.write_data_terminal_ready(true)?;
-    port.write_all(request.as_bytes())
+    port.write_all(command.as_bytes())?;
+
+    if args.is_empty() {
+        return port.write_all("\n".as_bytes());
+    }
+
+    let pb = if with_progress {
+        ProgressBar::new(args.len().try_into().unwrap())
+    } else {
+        ProgressBar::hidden()
+    };
+    for arg in args.iter() {
+        pb.inc(1);
+        port.write_all(" ".as_bytes())?;
+        port.write_all(arg.as_bytes())?;
+        thread::sleep(Duration::from_millis(25));
+    }
+    port.write_all("\n".as_bytes()).unwrap();
+    pb.finish_and_clear();
+    Ok(())
 }
 
 fn wait_for_data(port: &dyn SerialPort) {

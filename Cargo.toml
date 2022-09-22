@@ -7,6 +7,9 @@ license = "GPL-3.0-only"
 edition = "2021"
 rust-version = "1.59.0"
 
+[dependencies.indicatif]
+version = "0.17.1"
+
 [dependencies.serialport]
 version = "4.2.0"
 
