@@ -134,25 +134,22 @@ fn send_request(
     command: String,
     args: Vec<String>,
 ) -> Result<(), std::io::Error> {
+    let request = [vec![command], args.clone()].concat().join(" ") + "\n";
+
     port.write_data_terminal_ready(true)?;
-    port.write_all(command.as_bytes())?;
 
-    if args.is_empty() {
-        return port.write_all("\n".as_bytes());
-    }
-
-    let pb = if with_progress {
-        ProgressBar::new(args.len().try_into().unwrap())
+    let pb = if with_progress && !args.is_empty() {
+        ProgressBar::new(request.len().try_into().unwrap())
     } else {
         ProgressBar::hidden()
     };
-    for arg in args.iter() {
-        pb.inc(1);
-        port.write_all(" ".as_bytes())?;
-        port.write_all(arg.as_bytes())?;
-        thread::sleep(Duration::from_millis(25));
+
+    for c in request.as_bytes().chunks(64) {
+        pb.inc(c.len().try_into().unwrap());
+        port.write_all(c)?;
+        thread::sleep(Duration::from_millis(50));
     }
-    port.write_all("\n".as_bytes()).unwrap();
+
     pb.finish_and_clear();
     Ok(())
 }
