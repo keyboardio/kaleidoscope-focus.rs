@@ -16,7 +16,6 @@
 use clap::Parser;
 use indicatif::ProgressBar;
 use kaleidoscope::Focus;
-use std::time::Duration;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -44,14 +43,10 @@ fn main() {
         ::std::process::exit(1);
     });
 
-    let port = serialport::new(&device, 115200)
-        .timeout(Duration::from_millis(100))
-        .open()
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to open \"{}\". Error: {}", &device, e);
-            ::std::process::exit(1);
-        });
-    let mut focus = Focus::from(port);
+    let mut focus = Focus::create(&device).open().unwrap_or_else(|e| {
+        eprintln!("Failed to open \"{}\". Error: {}", &device, e);
+        ::std::process::exit(1);
+    });
 
     let pb = if !opts.args.is_empty() {
         ProgressBar::new(100)

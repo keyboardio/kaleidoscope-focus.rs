@@ -21,28 +21,46 @@ use std::time::Duration;
 pub struct Focus {
     port: Box<dyn SerialPort>,
     chunk_size: usize,
-    write_delay: u64,
+    interval: u64,
 }
 
-impl From<Box<dyn SerialPort>> for Focus {
-    fn from(port: Box<dyn SerialPort>) -> Self {
-        Self {
+pub struct FocusBuilder<'a> {
+    device: &'a str,
+    chunk_size: usize,
+    interval: u64,
+}
+
+impl FocusBuilder<'_> {
+    pub fn open(&self) -> Result<Focus, serialport::Error> {
+        let port = serialport::new(self.device, 11520)
+            .timeout(Duration::from_millis(self.interval))
+            .open()?;
+
+        Ok(Focus {
             port,
-            chunk_size: 32,
-            write_delay: 500,
-        }
+            chunk_size: self.chunk_size,
+            interval: self.interval,
+        })
     }
-}
 
-impl Focus {
     pub fn chunk_size(&mut self, chunk_size: usize) -> &Self {
         self.chunk_size = chunk_size;
         self
     }
 
-    pub fn write_delay(&mut self, write_delay: u64) -> &Self {
-        self.write_delay = write_delay;
+    pub fn interval(&mut self, interval: u64) -> &Self {
+        self.interval = interval;
         self
+    }
+}
+
+impl Focus {
+    pub fn create(device: &str) -> FocusBuilder {
+        FocusBuilder {
+            device,
+            chunk_size: 32,
+            interval: 50,
+        }
     }
 
     pub fn flush(&mut self) -> Result<(), std::io::Error> {
@@ -78,7 +96,7 @@ impl Focus {
         for c in request.as_bytes().chunks(self.chunk_size) {
             progress(c.len());
             self.port.write_all(c)?;
-            thread::sleep(Duration::from_millis(self.write_delay));
+            thread::sleep(Duration::from_millis(self.interval));
         }
 
         Ok(())
@@ -104,7 +122,7 @@ impl Focus {
                 }
             }
 
-            thread::sleep(Duration::from_millis(self.write_delay));
+            thread::sleep(Duration::from_millis(self.interval));
         }
 
         Ok(String::from_utf8_lossy(&reply)
@@ -117,7 +135,7 @@ impl Focus {
 
     fn wait_for_data(&mut self) -> Result<(), std::io::Error> {
         while self.port.bytes_to_read()? == 0 {
-            thread::sleep(Duration::from_millis(self.write_delay));
+            thread::sleep(Duration::from_millis(self.interval));
         }
         Ok(())
     }
