@@ -1,9 +1,20 @@
-[workspace]
+[package]
+name = "kaleidoscope"
+version = "0.1.0-snapshot"
+description = "A library to talk with Kaleidoscope-powered devices using the Focus protocol"
+categories = ["hardware-support"]
+license = "GPL-3.0-only"
+edition = "2021"
+rust-version = "1.59.0"
 
-members = [
-        "kaleidoscope",
-        "focus-send",
-]
+[dependencies]
+serialport = "4.2.0"
+indicatif = "0.17.1"
+
+[dependencies.clap]
+version = "4.0.0-rc.2"
+default_features = false
+features = ["std", "derive", "env", "help", "usage"]
 
 [profile.release]
 strip = true
