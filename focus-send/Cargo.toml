@@ -13,9 +13,6 @@ path = "../kaleidoscope"
 [dependencies.indicatif]
 version = "0.17.1"
 
-[dependencies.serialport]
-version = "4.2.0"
-
 [dependencies.clap]
 version = "4.0.0-rc.2"
 default_features = false

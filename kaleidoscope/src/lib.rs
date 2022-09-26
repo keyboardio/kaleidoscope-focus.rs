@@ -140,3 +140,54 @@ impl Focus {
         Ok(())
     }
 }
+
+pub fn find_devices() -> Option<Vec<String>> {
+    #[derive(PartialEq)]
+    struct DeviceDescriptor {
+        vid: u16,
+        pid: u16,
+    }
+    let supported_keyboards = [
+        // Keyboardio Model100
+        DeviceDescriptor {
+            vid: 0x3496,
+            pid: 0x0006,
+        },
+        // Keyboardio Atreus
+        DeviceDescriptor {
+            vid: 0x1209,
+            pid: 0x2303,
+        },
+        // Keyboardio Model01
+        DeviceDescriptor {
+            vid: 0x1209,
+            pid: 0x2301,
+        },
+    ];
+
+    // Otherwise list the serial ports, and return the first USB serial port
+    // that has a vid/pid that matches any of the Keyboardio devices.
+    Some(
+        serialport::available_ports()
+            .ok()?
+            .iter()
+            .filter_map(|p| match &p.port_type {
+                serialport::SerialPortType::UsbPort(port_info) => {
+                    struct MinimalPortInfo {
+                        ids: DeviceDescriptor,
+                        port: String,
+                    }
+                    Some(MinimalPortInfo {
+                        ids: DeviceDescriptor {
+                            vid: port_info.vid,
+                            pid: port_info.pid,
+                        },
+                        port: p.port_name.to_string(),
+                    })
+                }
+                _ => None,
+            })
+            .filter_map(|p| supported_keyboards.contains(&p.ids).then(|| p.port))
+            .collect(),
+    )
+}
