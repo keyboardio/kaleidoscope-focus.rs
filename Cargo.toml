@@ -9,12 +9,23 @@ rust-version = "1.59.0"
 
 [dependencies]
 serialport = "4.2.0"
-indicatif = "0.17.1"
+
+[dependencies.indicatif]
+version = "0.17.1"
+optional = true
 
 [dependencies.clap]
 version = "4.0.0-rc.2"
 default_features = false
 features = ["std", "derive", "env", "help", "usage"]
+optional = true
+
+[features]
+build-binary = ["indicatif", "clap"]
+
+[[bin]]
+name = "focus"
+required-features = ["build-binary"]
 
 [profile.release]
 strip = true
