@@ -104,6 +104,7 @@ version = "0.1.0-snapshot"
 dependencies = [
  "clap",
  "indicatif",
+ "kaleidoscope",
  "serialport",
 ]
 
@@ -122,6 +123,13 @@ dependencies = [
  "console",
  "number_prefix",
  "unicode-width",
+]
+
+[[package]]
+name = "kaleidoscope"
+version = "0.1.0-snapshot"
+dependencies = [
+ "serialport",
 ]
 
 [[package]]

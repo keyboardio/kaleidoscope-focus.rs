@@ -15,9 +15,7 @@
 
 use clap::Parser;
 use indicatif::ProgressBar;
-use serialport::SerialPort;
-use std::io::{self, Write};
-use std::thread;
+use kaleidoscope::Focus;
 use std::time::Duration;
 
 #[derive(Parser)]
@@ -46,22 +44,35 @@ fn main() {
         ::std::process::exit(1);
     });
 
-    let mut port = serialport::new(&device, 115200)
+    let port = serialport::new(&device, 115200)
         .timeout(Duration::from_millis(100))
         .open()
         .unwrap_or_else(|e| {
             eprintln!("Failed to open \"{}\". Error: {}", &device, e);
             ::std::process::exit(1);
         });
+    let mut focus = Focus::from(port);
 
-    flush(&mut port);
-
-    send_request(&mut port, !opts.quiet, opts.command, opts.args)
+    let pb = if !opts.args.is_empty() {
+        ProgressBar::new(100)
+    } else {
+        ProgressBar::hidden()
+    };
+    focus.flush().unwrap();
+    focus
+        .request_with_progress(
+            opts.command,
+            Some(opts.args),
+            |l| {
+                pb.set_length(l.try_into().unwrap());
+            },
+            |c| {
+                pb.inc(c.try_into().unwrap());
+            },
+        )
         .expect("failed to send the request to the keyboard");
-
-    wait_for_data(&*port);
-
-    let reply = read_reply(&mut port).expect("failed to read the reply");
+    pb.finish_and_clear();
+    let reply = focus.read_reply().expect("failed to read the reply");
     println!("{}", reply);
 }
 
@@ -117,89 +128,5 @@ impl Cli {
                 _ => None,
             })
             .find_map(|p| supported_keyboards.contains(&p.ids).then(|| p.port))
-    }
-}
-
-// Send an empty command, and consume any replies. This should clear any pending
-// commands or output.
-fn flush(port: &mut Box<dyn SerialPort>) {
-    send_request(port, false, String::from(" "), vec![]).expect("failed to send an empty command");
-    wait_for_data(&**port);
-    read_reply(port).expect("failed to flush the device");
-}
-
-fn send_request(
-    port: &mut Box<dyn SerialPort>,
-    with_progress: bool,
-    command: String,
-    args: Vec<String>,
-) -> Result<(), std::io::Error> {
-    let request = [vec![command], args.clone()].concat().join(" ") + "\n";
-
-    port.write_data_terminal_ready(true)?;
-
-    let pb = if with_progress && !args.is_empty() {
-        ProgressBar::new(request.len().try_into().unwrap())
-    } else {
-        ProgressBar::hidden()
-    };
-
-    for c in request.as_bytes().chunks(64) {
-        pb.inc(c.len().try_into().unwrap());
-        port.write_all(c)?;
-        thread::sleep(Duration::from_millis(50));
-    }
-
-    pb.finish_and_clear();
-    Ok(())
-}
-
-fn wait_for_data(port: &dyn SerialPort) {
-    while port.bytes_to_read().expect("Error calling bytes_to_read") == 0 {
-        thread::sleep(Duration::from_millis(100));
-    }
-}
-
-fn read_reply(port: &mut Box<dyn SerialPort>) -> Result<String, std::io::Error> {
-    let mut buffer: Vec<u8> = vec![0; 1024];
-    let mut reply = vec![];
-
-    port.read_data_set_ready()?;
-
-    loop {
-        match port.read(buffer.as_mut_slice()) {
-            Ok(t) => {
-                reply.extend(&buffer[..t]);
-            }
-            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
-                break;
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-
-        thread::sleep(Duration::from_millis(100));
-    }
-
-    Ok(cleanup_reply(String::from_utf8_lossy(&reply).to_string()))
-}
-
-fn cleanup_reply(reply: String) -> String {
-    reply
-        .lines()
-        .filter(|l| !l.is_empty() && *l != ".")
-        .collect::<Vec<&str>>()
-        .join("\n")
-}
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn cleanup_reply() {
-        assert_eq!(
-            super::cleanup_reply(String::from("line1\nline2\r\nline3")),
-            "line1\nline2\nline3"
-        );
     }
 }
