@@ -147,6 +147,15 @@ pub fn find_devices() -> Option<Vec<String>> {
         vid: u16,
         pid: u16,
     }
+    impl From<&serialport::UsbPortInfo> for DeviceDescriptor {
+        fn from(port: &serialport::UsbPortInfo) -> Self {
+            Self {
+                vid: port.vid,
+                pid: port.pid,
+            }
+        }
+    }
+
     let supported_keyboards = [
         // Keyboardio Model100
         DeviceDescriptor {
@@ -165,29 +174,20 @@ pub fn find_devices() -> Option<Vec<String>> {
         },
     ];
 
-    // Otherwise list the serial ports, and return the first USB serial port
-    // that has a vid/pid that matches any of the Keyboardio devices.
-    Some(
-        serialport::available_ports()
-            .ok()?
-            .iter()
-            .filter_map(|p| match &p.port_type {
-                serialport::SerialPortType::UsbPort(port_info) => {
-                    struct MinimalPortInfo {
-                        ids: DeviceDescriptor,
-                        port: String,
-                    }
-                    Some(MinimalPortInfo {
-                        ids: DeviceDescriptor {
-                            vid: port_info.vid,
-                            pid: port_info.pid,
-                        },
-                        port: p.port_name.to_string(),
-                    })
-                }
-                _ => None,
-            })
-            .filter_map(|p| supported_keyboards.contains(&p.ids).then(|| p.port))
-            .collect(),
-    )
+    let devices: Vec<String> = serialport::available_ports()
+        .ok()?
+        .iter()
+        .filter_map(|p| match &p.port_type {
+            serialport::SerialPortType::UsbPort(port_info) => supported_keyboards
+                .contains(&port_info.into())
+                .then(|| p.port_name.to_string()),
+            _ => None,
+        })
+        .collect();
+
+    if devices.is_empty() {
+        return None;
+    }
+
+    Some(devices)
 }
