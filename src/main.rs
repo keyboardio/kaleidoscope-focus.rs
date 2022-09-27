@@ -46,7 +46,7 @@ fn main() {
         ::std::process::exit(1);
     });
 
-    let mut port = serialport::new(&device, 11520)
+    let mut port = serialport::new(&device, 115200)
         .timeout(Duration::from_millis(100))
         .open()
         .unwrap_or_else(|e| {
