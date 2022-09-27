@@ -32,7 +32,7 @@ pub struct FocusBuilder<'a> {
 
 impl FocusBuilder<'_> {
     pub fn open(&self) -> Result<Focus, serialport::Error> {
-        let port = serialport::new(self.device, 11520)
+        let port = serialport::new(self.device, 115200)
             .timeout(Duration::from_millis(self.interval))
             .open()?;
 
