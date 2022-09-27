@@ -21,6 +21,7 @@ features = ["std", "derive", "env", "help", "usage"]
 optional = true
 
 [features]
+default = ["build-binary"]
 build-binary = ["indicatif", "clap"]
 
 [[bin]]
