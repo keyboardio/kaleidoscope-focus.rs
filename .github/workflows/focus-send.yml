@@ -76,7 +76,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --target=x86_64-unknown-linux-musl
+          args: --release
 
       - name: Build (macOS/Windows)
         if: runner.os != 'Linux'
@@ -88,7 +88,7 @@ jobs:
       - name: Prepare compressed binary (Linux)
         if: runner.os == 'Linux'
         run: |
-          xz -c target/x86_64-*-musl/release/focus-send \
+          xz -c target/release/focus-send \
                 > target/release/focus-send.linux_amd64.xz
 
       - name: Prepare compressed binary (macOS)
