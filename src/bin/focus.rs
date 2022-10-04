@@ -35,8 +35,8 @@ struct Cli {
 #[derive(Subcommand)]
 #[command(version, about)]
 enum Commands {
-    /// List available, focus-capable devices
-    ListDevices,
+    /// List available ports for focus-capable devices
+    ListPorts,
     /// Send a request to the keyboard, and display the reply
     Send(Send),
 }
@@ -49,7 +49,7 @@ struct Send {
     args: Vec<String>,
 }
 
-fn list_devices() {
+fn list_ports() {
     kaleidoscope::find_devices()
         .expect("No supported devices found")
         .iter()
@@ -96,7 +96,7 @@ fn main() {
     let opts = Cli::parse();
 
     match &opts.command {
-        Commands::ListDevices => list_devices(),
+        Commands::ListPorts => list_ports(),
         Commands::Send(s) => send(opts.device, s),
     }
 }
