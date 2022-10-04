@@ -88,21 +88,24 @@ jobs:
       - name: Prepare compressed binary (Linux)
         if: runner.os == 'Linux'
         run: |
-          xz -c target/release/focus-send \
-                > target/release/focus-send.linux_amd64.xz
+          tar -cf - target/release/focus-send \
+                    target/release/focus | \
+              xz -c > target/release/focus-send.linux_amd64.tar.xz
 
       - name: Prepare compressed binary (macOS)
         if: runner.os == 'macOS'
         run: |
-          xz -c target/release/focus-send \
-                > target/release/focus-send.macOS_amd64.xz
+          tar -cf - target/release/focus-send \
+                    target/release/focus | \
+              xz -c > target/release/focus-send.macOS_amd64.tar.xz
 
       - name: Prepare compressed binary (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          xz -c target/release/focus-send.exe \
-                > target/release/focus-send.exe.windows_amd64.xz
+          tar -cf - target/release/focus-send \
+                    target/release/focus | \
+              xz -c > target/release/focus-send.windows_amd64.tar.xz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
