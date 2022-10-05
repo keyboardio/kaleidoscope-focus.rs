@@ -116,7 +116,7 @@ jobs:
 
       - name: Discover the version tag
         id: version
-        run: echo ::set-output name=version::$(cargo pkgid | cut -d# -f2)
+        run: echo ::set-output name=version::$(cargo pkgid | cut -d@ -f2)
 
       - name: Download artifacts
         uses: actions/download-artifact@v2
