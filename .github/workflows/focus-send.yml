@@ -71,15 +71,7 @@ jobs:
         with:
           command: test
 
-      - name: Build (Linux)
-        if: runner.os == 'Linux'
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
-
-      - name: Build (macOS/Windows)
-        if: runner.os != 'Linux'
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
