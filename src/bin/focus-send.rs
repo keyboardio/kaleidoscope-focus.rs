@@ -79,10 +79,6 @@ impl Cli {
         }
 
         let devices = kaleidoscope::find_devices()?;
-        if devices.is_empty() {
-            None
-        } else {
-            Some(devices[0].clone())
-        }
+        Some(devices[0].clone())
     }
 }
