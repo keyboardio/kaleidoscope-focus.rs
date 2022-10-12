@@ -93,10 +93,15 @@ impl Focus {
 
         set_length(request.len());
 
-        for c in request.as_bytes().chunks(self.chunk_size) {
-            progress(c.len());
-            self.port.write_all(c)?;
-            thread::sleep(Duration::from_millis(self.interval));
+        if self.chunk_size > 0 {
+            for c in request.as_bytes().chunks(self.chunk_size) {
+                progress(c.len());
+                self.port.write_all(c)?;
+                thread::sleep(Duration::from_millis(self.interval));
+            }
+        } else {
+            self.port.write_all(request.as_bytes())?;
+            progress(request.len());
         }
 
         Ok(())
