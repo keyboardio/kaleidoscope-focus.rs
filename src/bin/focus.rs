@@ -43,6 +43,10 @@ enum Commands {
 
 #[derive(Args)]
 struct Send {
+    #[arg(short, long, default_value = "32")]
+    /// Set the size of the buffer used to send data. Setting it to 0 writes
+    /// everything all at once
+    chunk_size: usize,
     /// The command to send
     command: String,
     /// Optional arguments for <COMMAND>
@@ -64,10 +68,13 @@ fn send(device: Option<String>, opts: &Send) {
         None => kaleidoscope::find_devices().expect("No supported device found")[0].clone(),
     };
 
-    let mut focus = Focus::create(&device_path).open().unwrap_or_else(|e| {
-        eprintln!("Failed to open \"{}\". Error: {}", &device_path, e);
-        ::std::process::exit(1);
-    });
+    let mut focus = Focus::create(&device_path)
+        .chunk_size(opts.chunk_size)
+        .open()
+        .unwrap_or_else(|e| {
+            eprintln!("Failed to open \"{}\". Error: {}", &device_path, e);
+            ::std::process::exit(1);
+        });
 
     let pb = if !opts.args.is_empty() {
         ProgressBar::new(100)
