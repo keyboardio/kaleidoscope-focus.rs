@@ -89,7 +89,9 @@ fn send(device: Option<String>, opts: &Send) {
         .expect("failed to send the request to the keyboard");
     pb.finish_and_clear();
     let reply = focus.read_reply().expect("failed to read the reply");
-    println!("{}", reply);
+    if !reply.is_empty() {
+        println!("{}", reply);
+    }
 }
 
 fn main() {
