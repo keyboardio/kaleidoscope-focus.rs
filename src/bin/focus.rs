@@ -53,6 +53,15 @@ struct Send {
     args: Vec<String>,
 }
 
+fn main() {
+    let opts = Cli::parse();
+
+    match &opts.command {
+        Commands::ListPorts => list_ports(),
+        Commands::Send(s) => send(opts.device, s),
+    }
+}
+
 fn list_ports() {
     kaleidoscope::find_devices()
         .expect("No supported devices found")
@@ -98,14 +107,5 @@ fn send(device: Option<String>, opts: &Send) {
     let reply = focus.read_reply().expect("failed to read the reply");
     if !reply.is_empty() {
         println!("{}", reply);
-    }
-}
-
-fn main() {
-    let opts = Cli::parse();
-
-    match &opts.command {
-        Commands::ListPorts => list_ports(),
-        Commands::Send(s) => send(opts.device, s),
     }
 }
