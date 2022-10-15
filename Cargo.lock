@@ -116,7 +116,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kaleidoscope"
+name = "kaleidoscope-focus"
 version = "0.1.0-snapshot"
 dependencies = [
  "clap",
