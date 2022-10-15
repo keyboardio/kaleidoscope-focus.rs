@@ -1,5 +1,5 @@
 [package]
-name = "kaleidoscope-focus"
+name = "kaleidoscope_focus"
 version = "0.1.0-snapshot"
 description = "A library to talk with Kaleidoscope-powered devices using the Focus protocol"
 categories = ["hardware-support"]

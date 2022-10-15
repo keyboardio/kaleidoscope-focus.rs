@@ -15,7 +15,7 @@
 
 use clap::Parser;
 use indicatif::ProgressBar;
-use kaleidoscope::Focus;
+use kaleidoscope_focus::Focus;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -78,7 +78,7 @@ impl Cli {
             return Some(device.to_string());
         }
 
-        let devices = kaleidoscope::find_devices()?;
+        let devices = kaleidoscope_focus::find_devices()?;
         Some(devices[0].clone())
     }
 }

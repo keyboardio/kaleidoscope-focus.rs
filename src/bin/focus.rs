@@ -15,7 +15,7 @@
 
 use clap::{Args, Parser, Subcommand};
 use indicatif::ProgressBar;
-use kaleidoscope::Focus;
+use kaleidoscope_focus::Focus;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -63,7 +63,7 @@ fn main() {
 }
 
 fn list_ports() {
-    kaleidoscope::find_devices()
+    kaleidoscope_focus::find_devices()
         .expect("No supported devices found")
         .iter()
         .for_each(|device| {
@@ -74,7 +74,7 @@ fn list_ports() {
 fn send(device: Option<String>, opts: &Send) {
     let device_path = match device {
         Some(d) => d,
-        None => kaleidoscope::find_devices().expect("No supported device found")[0].clone(),
+        None => kaleidoscope_focus::find_devices().expect("No supported device found")[0].clone(),
     };
 
     let mut focus = Focus::create(&device_path)
