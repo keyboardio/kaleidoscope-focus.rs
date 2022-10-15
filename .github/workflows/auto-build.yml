@@ -1,4 +1,4 @@
-name: focus-send.rs
+name: Automatic builds
 
 on:
   push:
