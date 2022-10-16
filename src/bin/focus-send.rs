@@ -14,7 +14,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use clap::Parser;
-use indicatif::ProgressBar;
 use kaleidoscope_focus::Focus;
 
 #[derive(Parser)]
@@ -29,8 +28,6 @@ struct Cli {
         help = "The device to connect to"
     )]
     device: Option<String>,
-    #[arg(short, long, help = "Operate quietly", default_value = "false")]
-    quiet: bool,
 
     command: String,
     args: Vec<String>,
@@ -48,16 +45,10 @@ fn main() {
         ::std::process::exit(1);
     });
 
-    let pb = if !opts.args.is_empty() {
-        ProgressBar::new(100)
-    } else {
-        ProgressBar::hidden()
-    };
     focus.flush().unwrap();
     focus
-        .request(opts.command, Some(opts.args), Some(&pb))
+        .request(opts.command, Some(opts.args), None)
         .expect("failed to send the request to the keyboard");
-    pb.finish_and_clear();
     let reply = focus.read_reply().expect("failed to read the reply");
     println!("{}", reply);
 }
