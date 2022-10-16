@@ -18,6 +18,20 @@ use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
+pub trait ProgressReport {
+    fn set_length(&self, length: usize);
+    fn progress(&self, delta: usize);
+}
+
+impl ProgressReport for indicatif::ProgressBar {
+    fn set_length(&self, length: usize) {
+        self.set_length(length.try_into().unwrap());
+    }
+    fn progress(&self, delta: usize) {
+        self.inc(delta.try_into().unwrap());
+    }
+}
+
 pub struct Focus {
     port: Box<dyn SerialPort>,
     chunk_size: usize,
@@ -64,7 +78,7 @@ impl Focus {
     }
 
     pub fn flush(&mut self) -> Result<(), std::io::Error> {
-        self.request(String::from(" "), None)?;
+        self.request(String::from(" "), None, None)?;
         self.read_reply()?;
         Ok(())
     }
@@ -73,35 +87,28 @@ impl Focus {
         &mut self,
         command: String,
         args: Option<Vec<String>>,
+        progress_report: Option<&dyn ProgressReport>,
     ) -> Result<(), std::io::Error> {
-        self.request_with_progress(command, args, |_| {}, |_| {})
-    }
-
-    pub fn request_with_progress<FL, FP>(
-        &mut self,
-        command: String,
-        args: Option<Vec<String>>,
-        set_length: FL,
-        progress: FP,
-    ) -> Result<(), std::io::Error>
-    where
-        FL: Fn(usize),
-        FP: Fn(usize),
-    {
         let request = [vec![command], args.unwrap_or_default()].concat().join(" ") + "\n";
         self.port.write_data_terminal_ready(true)?;
 
-        set_length(request.len());
+        if let Some(pr) = progress_report {
+            pr.set_length(request.len());
+        }
 
         if self.chunk_size > 0 {
             for c in request.as_bytes().chunks(self.chunk_size) {
                 self.port.write_all(c)?;
                 thread::sleep(Duration::from_millis(self.interval));
-                progress(c.len());
+                if let Some(pr) = progress_report {
+                    pr.progress(c.len());
+                }
             }
         } else {
             self.port.write_all(request.as_bytes())?;
-            progress(request.len());
+            if let Some(pr) = progress_report {
+                pr.progress(request.len());
+            }
         }
 
         Ok(())

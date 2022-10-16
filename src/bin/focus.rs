@@ -92,16 +92,7 @@ fn send(device: Option<String>, opts: &Send) {
     };
     focus.flush().unwrap();
     focus
-        .request_with_progress(
-            opts.command.to_string(),
-            Some(opts.args.clone()),
-            |l| {
-                pb.set_length(l.try_into().unwrap());
-            },
-            |c| {
-                pb.inc(c.try_into().unwrap());
-            },
-        )
+        .request(opts.command.to_string(), Some(opts.args.clone()), Some(&pb))
         .expect("failed to send the request to the keyboard");
     pb.finish_and_clear();
     let reply = focus.read_reply().expect("failed to read the reply");
