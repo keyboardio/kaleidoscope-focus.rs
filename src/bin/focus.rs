@@ -58,7 +58,7 @@ fn main() {
 
     match &opts.command {
         Commands::ListPorts => list_ports(),
-        Commands::Send(s) => send(opts.device, s),
+        Commands::Send(s) => send(s, &opts),
     }
 }
 
@@ -71,9 +71,9 @@ fn list_ports() {
         });
 }
 
-fn send(device: Option<String>, opts: &Send) {
-    let device_path = match device {
-        Some(d) => d,
+fn send(opts: &Send, main_opts: &Cli) {
+    let device_path = match &main_opts.device {
+        Some(d) => d.to_string(),
         None => kaleidoscope_focus::find_devices().expect("No supported device found")[0].clone(),
     };
 
@@ -85,7 +85,7 @@ fn send(device: Option<String>, opts: &Send) {
             ::std::process::exit(1);
         });
 
-    let pb = if !opts.args.is_empty() {
+    let pb = if !opts.args.is_empty() && !main_opts.quiet {
         ProgressBar::new(100)
     } else {
         ProgressBar::hidden()
