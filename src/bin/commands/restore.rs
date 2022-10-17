@@ -31,12 +31,14 @@ pub fn restore(main_opts: MainOptions) {
     };
 
     pb.set_style(ProgressStyle::with_template("{spinner} {pos} / {len} ({msg}) ").unwrap());
-    backup.commands.iter().for_each(|(k, v)| {
+    backup.restore.iter().for_each(|k| {
         pb.set_message(k.clone());
-        focus
-            .request(k.to_string(), Some(vec![v.to_string()]), None)
-            .expect("Restoration failed");
-        focus.read_reply().expect("Restoration failed");
+        if let Some(v) = backup.commands.get(k) {
+            focus
+                .request(k.to_string(), Some(vec![v.to_string()]), None)
+                .expect("Restoration failed");
+            focus.read_reply().expect("Restoration failed");
+        }
         pb.inc(1);
     });
     pb.finish_and_clear();

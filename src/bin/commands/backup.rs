@@ -21,6 +21,7 @@ use crate::commands::{connect, MainOptions};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Backup {
+    pub restore: Vec<String>,
     pub commands: HashMap<String, String>,
 }
 
@@ -44,6 +45,7 @@ pub fn backup(main_opts: MainOptions) {
 
     let mut backup = Backup {
         commands: HashMap::new(),
+        restore: backup_commands.iter().map(|cmd| cmd.to_string()).collect(),
     };
     let pb = if main_opts.quiet {
         ProgressBar::hidden()
