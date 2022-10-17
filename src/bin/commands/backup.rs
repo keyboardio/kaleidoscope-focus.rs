@@ -98,7 +98,9 @@ pub fn backup(main_opts: MainOptions) {
             .request(cmd.to_string(), None, None)
             .expect("Failed to send command");
         let reply = focus.read_reply().expect("Failed to read a reply");
-        backup.commands.insert(cmd.to_string(), reply);
+        if !reply.is_empty() {
+            backup.commands.insert(cmd.to_string(), reply);
+        }
         pb.inc(1);
     });
     pb.finish_and_clear();
