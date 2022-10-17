@@ -14,53 +14,39 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use clap::Parser;
-use kaleidoscope_focus::Focus;
+
+mod commands;
+use crate::commands::{send::Send, MainOptions};
 
 #[derive(Parser)]
 #[command(version, about)]
 struct Cli {
-    #[arg(
-        short,
-        long,
-        env,
-        hide_env = true,
-        value_name = "PATH",
-        help = "The device to connect to"
-    )]
+    #[arg(short, long, env, hide_env = true, value_name = "PATH")]
+    /// The device to connect to
     device: Option<String>,
 
+    /// The command to send
     command: String,
+    /// Optional arguments for <COMMAND>
     args: Vec<String>,
+}
+
+impl From<&Cli> for MainOptions {
+    fn from(opts: &Cli) -> Self {
+        Self {
+            device: opts.device.clone(),
+            chunk_size: 32,
+            quiet: true,
+        }
+    }
 }
 
 fn main() {
     let opts = Cli::parse();
-    let device = opts.device().unwrap_or_else(|| {
-        eprintln!("No device found to connect to");
-        ::std::process::exit(1);
-    });
+    let send_opts = Send {
+        command: opts.command.to_string(),
+        args: opts.args.clone(),
+    };
 
-    let mut focus = Focus::create(&device).open().unwrap_or_else(|e| {
-        eprintln!("Failed to open \"{}\". Error: {}", &device, e);
-        ::std::process::exit(1);
-    });
-
-    focus.flush().unwrap();
-    focus
-        .request(opts.command, Some(opts.args), None)
-        .expect("failed to send the request to the keyboard");
-    let reply = focus.read_reply().expect("failed to read the reply");
-    println!("{}", reply);
-}
-
-impl Cli {
-    fn device(&self) -> Option<String> {
-        // If we had a device explicitly specified, use that.
-        if let Some(device) = &self.device {
-            return Some(device.to_string());
-        }
-
-        let devices = kaleidoscope_focus::find_devices()?;
-        Some(devices[0].clone())
-    }
+    commands::send(&send_opts, (&opts).into());
 }
