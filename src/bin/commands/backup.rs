@@ -100,6 +100,8 @@ pub fn backup(main_opts: MainOptions) {
         let reply = focus.read_reply().expect("Failed to read a reply");
         if !reply.is_empty() {
             backup.commands.insert(cmd.to_string(), reply);
+        } else {
+            backup.restore.retain(|x| x != cmd);
         }
         pb.inc(1);
     });
