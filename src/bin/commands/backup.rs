@@ -37,10 +37,51 @@ pub fn backup(main_opts: MainOptions) {
         .read_reply()
         .expect("failed to read the list of backup eligible commands");
 
-    let backup_commands: Vec<&str> = reply.lines().collect();
+    let mut backup_commands: Vec<&str> = reply.lines().collect();
     if backup_commands.is_empty() {
-        eprintln!("The `backup` command appears to be unsupported by the firmware.");
-        ::std::process::exit(1);
+        // If the `backup` command is not supported, fall back to a static list
+        // of commands. This is a lost of commands in Kaleidoscope proper that
+        // can be backed up as of 2022-10-17.
+        //
+        // The static list is here to make it seamless to backup older firmware
+        // too.
+        backup_commands = vec![
+            "autoshift.categories",
+            "autoshift.timeout",
+            "colormap.map",
+            "escape_oneshot.cancel_key",
+            "hardware.keyscan",
+            "hardware.side_power",
+            "hardware.sled_current",
+            "hostos.type",
+            "idleleds.time_limit",
+            "keymap.custom",
+            "keymap.layerNames",
+            "keymap.onlyCustom",
+            "led.brightness",
+            "led_mode.default",
+            "macros.map",
+            "mousekeys.accel_duration",
+            "mousekeys.base_speed",
+            "mousekeys.init_speed",
+            "mousekeys.scroll_interval",
+            "oneshot.auto_layers",
+            "oneshot.auto_mods",
+            "oneshot.double_tap_timeout",
+            "oneshot.hold_timeout",
+            "oneshot.stickable_keys",
+            "oneshot.timeout",
+            "palette",
+            "settings.defaultLayer",
+            "spacecadet.mode",
+            "spacecadet.timeout",
+            "tapdance.map",
+            "typingbreaks.idleTimeLimit",
+            "typingbreaks.leftMaxKeys",
+            "typingbreaks.lockLength",
+            "typingbreaks.lockTimeOut",
+            "typingbreaks.rightMaxKeys",
+        ];
     }
 
     let mut backup = Backup {
