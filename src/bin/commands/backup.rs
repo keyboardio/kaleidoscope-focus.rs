@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use clap::Args;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -35,13 +35,19 @@ pub struct Backup {
 #[allow(dead_code)]
 pub fn backup(opts: &Backup) {
     let mut focus = connect(&opts.shared);
+    let progress = if opts.shared.quiet {
+        ProgressBar::hidden()
+    } else {
+        ProgressBar::new(0)
+            .with_style(ProgressStyle::with_template("{spinner} backing up: {msg}").unwrap())
+    };
 
     focus.flush().unwrap();
     focus
-        .request("backup", None, None)
+        .request("backup", None, Some(&progress))
         .expect("Failed to request backup eligible commands");
     let reply = focus
-        .read_reply()
+        .read_reply(Some(&progress))
         .expect("failed to read the list of backup eligible commands");
 
     let mut backup_commands: Vec<&str> = reply.lines().collect();
@@ -95,24 +101,22 @@ pub fn backup(opts: &Backup) {
         commands: HashMap::new(),
         restore: backup_commands.iter().map(|cmd| cmd.to_string()).collect(),
     };
-    let pb = if opts.shared.quiet {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new(backup_commands.len().try_into().unwrap())
-    };
     backup_commands.iter().for_each(|cmd| {
+        progress.set_message(cmd.to_string());
         focus
-            .request(cmd, None, None)
+            .request(cmd, None, Some(&progress))
             .expect("Failed to send command");
-        let reply = focus.read_reply().expect("Failed to read a reply");
+        let reply = focus
+            .read_reply(Some(&progress))
+            .expect("Failed to read a reply");
         if !reply.is_empty() {
             backup.commands.insert(cmd.to_string(), reply);
         } else {
             backup.restore.retain(|x| x != cmd);
         }
-        pb.inc(1);
+        progress.inc(1);
     });
-    pb.finish_and_clear();
+    progress.finish_and_clear();
 
     println!("{}", serde_json::to_string(&backup).unwrap());
 }

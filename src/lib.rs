@@ -104,11 +104,14 @@ impl Focus {
         args: Option<Vec<String>>,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<(), std::io::Error> {
-        let request = [vec![command.to_string()], args.unwrap_or_default()].concat().join(" ") + "\n";
+        let request = [vec![command.to_string()], args.unwrap_or_default()]
+            .concat()
+            .join(" ")
+            + "\n";
         self.port.write_data_terminal_ready(true)?;
 
         if let Some(pr) = progress_report {
-            pr.set_length(request.len());
+            pr.reset(request.len());
         }
 
         if self.chunk_size > 0 {
@@ -135,27 +138,55 @@ impl Focus {
     /// return an empty string if the command is unknown, or if it had no
     /// output.
     ///
+    /// Progress reporting optional.
+    ///
+    /// # Examples
+    ///
     /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     /// conn.request("settings.version", None, None);
-    /// let reply = conn.read_reply()?;
+    /// let reply = conn.read_reply(None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn read_reply(&mut self) -> Result<String, std::io::Error> {
+    ///
+    /// ```no_run
+    /// # use kaleidoscope_focus::Focus;
+    /// # use indicatif::ProgressBar;
+    /// # fn main() -> Result<(), std::io::Error> {
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
+    /// let progress = ProgressBar::new(0);
+    ///
+    /// conn.request("settings.version", None, Some(&progress));
+    /// let reply = conn.read_reply(Some(&progress))?;
+    /// assert_eq!(reply, "1 ");
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn read_reply(
+        &mut self,
+        progress_report: Option<&dyn ProgressReport>,
+    ) -> Result<String, std::io::Error> {
         let mut buffer: Vec<u8> = vec![0; 1024];
         let mut reply = vec![];
 
         self.port.read_data_set_ready()?;
         self.wait_for_data()?;
 
+        if let Some(pr) = progress_report {
+            pr.reset(0);
+        }
+
         loop {
             match self.port.read(buffer.as_mut_slice()) {
                 Ok(t) => {
                     reply.extend(&buffer[..t]);
+                    if let Some(pr) = progress_report {
+                        pr.progress(t);
+                    }
                 }
                 Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
                     break;
@@ -193,14 +224,14 @@ impl Focus {
     ///
     /// /// ...and then send the request we want the output of.
     /// conn.request("settings.version", None, None)?;
-    /// let reply = conn.read_reply()?;
+    /// let reply = conn.read_reply(None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
     pub fn flush(&mut self) -> Result<(), std::io::Error> {
         self.request(" ", None, None)?;
-        self.read_reply()?;
+        self.read_reply(None)?;
         Ok(())
     }
 
@@ -333,13 +364,14 @@ pub fn find_devices() -> Option<Vec<String>> {
 /// [`indicatif::ProgressBar`].
 pub trait ProgressReport {
     #[allow(missing_docs)]
-    fn set_length(&self, length: usize);
+    fn reset(&self, length: usize);
     #[allow(missing_docs)]
     fn progress(&self, delta: usize);
 }
 
 impl ProgressReport for indicatif::ProgressBar {
-    fn set_length(&self, length: usize) {
+    fn reset(&self, length: usize) {
+        self.set_position(0);
         self.set_length(length.try_into().unwrap());
     }
     fn progress(&self, delta: usize) {

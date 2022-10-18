@@ -32,22 +32,25 @@ pub fn restore(opts: &Restore) {
         serde_json::from_reader(io::stdin()).expect("Unable to parse the backup");
 
     let mut focus = connect(&opts.shared);
-    let pb = if opts.shared.quiet {
+
+    let progress = if opts.shared.quiet {
         ProgressBar::hidden()
     } else {
-        ProgressBar::new(backup.commands.len().try_into().unwrap())
+        ProgressBar::new(0)
+            .with_style(ProgressStyle::with_template("{spinner} restoring: {msg}").unwrap())
     };
 
-    pb.set_style(ProgressStyle::with_template("{spinner} {pos} / {len} ({msg}) ").unwrap());
     backup.restore.iter().for_each(|k| {
-        pb.set_message(k.clone());
+        progress.set_message(k.clone());
         if let Some(v) = backup.commands.get(k) {
             focus
-                .request(k, Some(vec![v.to_string()]), None)
+                .request(k, Some(vec![v.to_string()]), Some(&progress))
                 .expect("Restoration failed");
-            focus.read_reply().expect("Restoration failed");
+            focus
+                .read_reply(Some(&progress))
+                .expect("Restoration failed");
         }
-        pb.inc(1);
+        progress.inc(1);
     });
-    pb.finish_and_clear();
+    progress.finish_and_clear();
 }
