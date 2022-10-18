@@ -82,14 +82,14 @@ jobs:
         run: |
           tar -cf - target/release/focus-send \
                     target/release/focus | \
-              xz -c > target/release/focus-send.linux_amd64.tar.xz
+              xz -c > target/release/kaleidoscope-focus.linux_amd64.tar.xz
 
       - name: Prepare compressed binary (macOS)
         if: runner.os == 'macOS'
         run: |
           tar -cf - target/release/focus-send \
                     target/release/focus | \
-              xz -c > target/release/focus-send.macOS_amd64.tar.xz
+              xz -c > target/release/kaleidoscope-focus.macOS_amd64.tar.xz
 
       - name: Prepare compressed binary (Windows)
         if: runner.os == 'Windows'
@@ -97,7 +97,7 @@ jobs:
         run: |
           tar -cf - target/release/focus-send \
                     target/release/focus | \
-              xz -c > target/release/focus-send.windows_amd64.tar.xz
+              xz -c > target/release/kaleidoscope-focus.windows_amd64.tar.xz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -141,7 +141,7 @@ jobs:
           VERSION: ${{steps.version.outputs.version}}
         shell: bash
         run: |
-          gh release create -p -t "focus-send ${VERSION}" \
+          gh release create -p -t "kaleidoscope-focus.rs ${VERSION}" \
                             -n "Development snapshot." \
                             v${VERSION}
 
