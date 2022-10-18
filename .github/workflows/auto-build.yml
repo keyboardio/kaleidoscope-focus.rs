@@ -100,7 +100,7 @@ jobs:
               xz -c > target/release/kaleidoscope-focus.windows_amd64.tar.xz
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ runner.os }}-artifact
           path: |
@@ -119,7 +119,7 @@ jobs:
         run: echo ::set-output name=version::$(cargo pkgid | cut -d@ -f2)
 
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
 
