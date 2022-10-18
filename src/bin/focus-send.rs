@@ -31,20 +31,14 @@ struct Cli {
     args: Vec<String>,
 }
 
-impl From<&Cli> for ConnectionOptions {
-    fn from(opts: &Cli) -> Self {
-        Self {
-            device: opts.device.clone(),
-            chunk_size: 32,
-            quiet: true,
-        }
-    }
-}
-
 fn main() {
     let opts = Cli::parse();
     let send_opts = Send {
-        shared: (&opts).into(),
+        shared: ConnectionOptions {
+            device: opts.device,
+            chunk_size: 32,
+            quiet: true,
+        },
         command: opts.command.to_string(),
         args: opts.args.clone(),
     };
