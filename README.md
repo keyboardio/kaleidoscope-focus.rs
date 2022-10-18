@@ -4,6 +4,7 @@
 > powered keyboards via [Focus][focus].
 
  [focus]: https://kaleidoscope.readthedocs.io/en/latest/plugins/Kaleidoscope-FocusSerial.html
+ [kaleidoscope]: https://github.com/keyboardio/Kaleidoscope
 
 ## Downloads
 
