@@ -38,7 +38,7 @@ pub fn backup(opts: &Backup) {
 
     focus.flush().unwrap();
     focus
-        .request("backup".to_string(), None, None)
+        .request("backup", None, None)
         .expect("Failed to request backup eligible commands");
     let reply = focus
         .read_reply()
@@ -102,7 +102,7 @@ pub fn backup(opts: &Backup) {
     };
     backup_commands.iter().for_each(|cmd| {
         focus
-            .request(cmd.to_string(), None, None)
+            .request(cmd, None, None)
             .expect("Failed to send command");
         let reply = focus.read_reply().expect("Failed to read a reply");
         if !reply.is_empty() {

@@ -43,7 +43,7 @@ pub fn restore(opts: &Restore) {
         pb.set_message(k.clone());
         if let Some(v) = backup.commands.get(k) {
             focus
-                .request(k.to_string(), Some(vec![v.to_string()]), None)
+                .request(k, Some(vec![v.to_string()]), None)
                 .expect("Restoration failed");
             focus.read_reply().expect("Restoration failed");
         }

@@ -79,7 +79,7 @@ impl Focus {
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// let request = conn.request("help".to_string(), None, None);
+    /// let request = conn.request("help", None, None);
     /// assert!(request.is_ok());
     /// #   Ok(())
     /// # }
@@ -91,7 +91,7 @@ impl Focus {
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     /// let progress = ProgressBar::new(0);
-    /// let request = conn.request("keymap.onlyCustom".to_string(),
+    /// let request = conn.request("keymap.onlyCustom",
     ///                            Some(vec!["1".to_string()]),
     ///                            Some(&progress));
     /// assert!(request.is_ok());
@@ -100,11 +100,11 @@ impl Focus {
     /// ```
     pub fn request(
         &mut self,
-        command: String,
+        command: &str,
         args: Option<Vec<String>>,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<(), std::io::Error> {
-        let request = [vec![command], args.unwrap_or_default()].concat().join(" ") + "\n";
+        let request = [vec![command.to_string()], args.unwrap_or_default()].concat().join(" ") + "\n";
         self.port.write_data_terminal_ready(true)?;
 
         if let Some(pr) = progress_report {
@@ -139,7 +139,7 @@ impl Focus {
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// conn.request("settings.version".to_string(), None, None);
+    /// conn.request("settings.version", None, None);
     /// let reply = conn.read_reply()?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
@@ -187,19 +187,19 @@ impl Focus {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     ///
     /// /// Send a request whose output we're not interested in.
-    /// conn.request("help".to_string(), None, None)?;
+    /// conn.request("help", None, None)?;
     /// /// Flush it!
     /// conn.flush()?;
     ///
     /// /// ...and then send the request we want the output of.
-    /// conn.request("settings.version".to_string(), None, None)?;
+    /// conn.request("settings.version", None, None)?;
     /// let reply = conn.read_reply()?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
     pub fn flush(&mut self) -> Result<(), std::io::Error> {
-        self.request(String::from(" "), None, None)?;
+        self.request(" ", None, None)?;
         self.read_reply()?;
         Ok(())
     }
