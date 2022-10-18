@@ -37,6 +37,10 @@ build-binary = ["indicatif", "clap", "serde", "serde_json"]
 name = "focus"
 required-features = ["build-binary"]
 
+[[bin]]
+name = "focus-send"
+required-features = ["build-binary"]
+
 [profile.release]
 strip = true
 panic = "abort"
