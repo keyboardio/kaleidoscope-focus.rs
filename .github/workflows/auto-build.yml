@@ -115,8 +115,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Discover the version tag
-        id: version
-        run: echo ::set-output name=version::$(cargo pkgid | cut -d@ -f2)
+        run: echo "PKG_VERSION=$(cargo pkgid | cut -d@ -f2)" >>$GITHUB_ENV
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -124,10 +123,10 @@ jobs:
           path: artifacts
 
       - name: Delete the snapshot release
-        if: ${{ contains(steps.version.outputs.version, 'snapshot') }}
+        if: ${{ contains(env.PKG_VERSION, 'snapshot') }}
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
-          TAG: v${{steps.version.outputs.version}}
+          TAG: v${{ env.PKG_VERSION }}
         shell: bash
         run: |
           gh release delete -y ${TAG} || true
@@ -135,10 +134,10 @@ jobs:
           git push origin :${TAG} || true
 
       - name: Recreate the snapshot release
-        if: ${{ contains(steps.version.outputs.version, 'snapshot') }}
+        if: ${{ contains(env.PKG_VERSION, 'snapshot') }}
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
-          VERSION: ${{steps.version.outputs.version}}
+          VERSION: ${{ env.PKG_VERSION }}
         shell: bash
         run: |
           gh release create -p -t "kaleidoscope-focus.rs ${VERSION}" \
@@ -148,7 +147,7 @@ jobs:
       - name: Upload artifacts to the release
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
-          TAG: v${{steps.version.outputs.version}}
+          TAG: v${{ env.PKG_VERSION }}
         shell: bash
         run: |
           gh release upload ${TAG} artifacts/*/*.xz
