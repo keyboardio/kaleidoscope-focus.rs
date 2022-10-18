@@ -13,18 +13,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use clap::Args;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io;
 
-use crate::commands::backup::Backup;
-use crate::commands::{connect, MainOptions};
+use crate::commands::backup::BackupData;
+use crate::commands::{connect, ConnectionOptions};
+
+#[derive(Args)]
+pub struct Restore {
+    #[command(flatten)]
+    pub shared: ConnectionOptions,
+}
 
 #[allow(dead_code)]
-pub fn restore(main_opts: MainOptions) {
-    let backup: Backup = serde_json::from_reader(io::stdin()).expect("Unable to parse the backup");
+pub fn restore(opts: &Restore) {
+    let backup: BackupData =
+        serde_json::from_reader(io::stdin()).expect("Unable to parse the backup");
 
-    let mut focus = connect(&main_opts);
-    let pb = if main_opts.quiet {
+    let mut focus = connect(&opts.shared);
+    let pb = if opts.shared.quiet {
         ProgressBar::hidden()
     } else {
         ProgressBar::new(backup.commands.len().try_into().unwrap())

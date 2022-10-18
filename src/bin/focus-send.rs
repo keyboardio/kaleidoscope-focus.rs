@@ -16,7 +16,7 @@
 use clap::Parser;
 
 mod commands;
-use crate::commands::{send::Send, MainOptions};
+use crate::commands::{send::Send, ConnectionOptions};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -31,7 +31,7 @@ struct Cli {
     args: Vec<String>,
 }
 
-impl From<&Cli> for MainOptions {
+impl From<&Cli> for ConnectionOptions {
     fn from(opts: &Cli) -> Self {
         Self {
             device: opts.device.clone(),
@@ -44,9 +44,10 @@ impl From<&Cli> for MainOptions {
 fn main() {
     let opts = Cli::parse();
     let send_opts = Send {
+        shared: (&opts).into(),
         command: opts.command.to_string(),
         args: opts.args.clone(),
     };
 
-    commands::send(&send_opts, (&opts).into());
+    commands::send(&send_opts);
 }

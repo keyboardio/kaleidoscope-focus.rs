@@ -13,21 +13,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use clap::Args;
 use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::commands::{connect, MainOptions};
+use crate::commands::{connect, ConnectionOptions};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Backup {
+pub struct BackupData {
     pub restore: Vec<String>,
     pub commands: HashMap<String, String>,
 }
 
+#[derive(Args)]
+pub struct Backup {
+    #[command(flatten)]
+    pub shared: ConnectionOptions,
+}
+
 #[allow(dead_code)]
-pub fn backup(main_opts: MainOptions) {
-    let mut focus = connect(&main_opts);
+pub fn backup(opts: &Backup) {
+    let mut focus = connect(&opts.shared);
 
     focus.flush().unwrap();
     focus
@@ -84,11 +91,11 @@ pub fn backup(main_opts: MainOptions) {
         ];
     }
 
-    let mut backup = Backup {
+    let mut backup = BackupData {
         commands: HashMap::new(),
         restore: backup_commands.iter().map(|cmd| cmd.to_string()).collect(),
     };
-    let pb = if main_opts.quiet {
+    let pb = if opts.shared.quiet {
         ProgressBar::hidden()
     } else {
         ProgressBar::new(backup_commands.len().try_into().unwrap())

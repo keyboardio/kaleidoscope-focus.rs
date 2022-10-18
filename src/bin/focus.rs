@@ -16,24 +16,11 @@
 use clap::{Parser, Subcommand};
 
 mod commands;
-use crate::commands::{send::Send, MainOptions};
+use crate::commands::{backup::Backup, restore::Restore, send::Send};
 
 #[derive(Parser)]
 #[command(version, about)]
 struct Cli {
-    #[arg(short, long, env, hide_env = true, value_name = "PATH")]
-    /// The device to connect to
-    device: Option<String>,
-
-    #[arg(short, long, default_value = "32")]
-    /// Set the size of the buffer used to send data. Setting it to 0 writes
-    /// everything all at once
-    chunk_size: usize,
-
-    #[arg(short, long, default_value = "false")]
-    /// Operate quietly
-    quiet: bool,
-
     #[command(subcommand)]
     command: Commands,
 }
@@ -46,19 +33,9 @@ enum Commands {
     /// Send a request to the keyboard, and display the reply
     Send(Send),
     /// Create a backup of the keyboards configuration
-    Backup,
+    Backup(Backup),
     /// Restore the keyboards configuration from backup
-    Restore,
-}
-
-impl From<&Cli> for MainOptions {
-    fn from(opts: &Cli) -> Self {
-        Self {
-            device: opts.device.clone(),
-            chunk_size: opts.chunk_size,
-            quiet: opts.quiet,
-        }
-    }
+    Restore(Restore),
 }
 
 fn main() {
@@ -66,8 +43,8 @@ fn main() {
 
     match &opts.command {
         Commands::ListPorts => commands::list_ports(),
-        Commands::Send(s) => commands::send(s, (&opts).into()),
-        Commands::Backup => commands::backup((&opts).into()),
-        Commands::Restore => commands::restore((&opts).into()),
+        Commands::Send(s) => commands::send(s),
+        Commands::Backup(b) => commands::backup(b),
+        Commands::Restore(r) => commands::restore(r),
     }
 }

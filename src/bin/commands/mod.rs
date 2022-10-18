@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use clap::Args;
 use kaleidoscope_focus::Focus;
 
 pub mod backup;
@@ -25,13 +26,23 @@ pub use list_ports::list_ports;
 pub use restore::restore;
 pub use send::send;
 
-pub struct MainOptions {
+#[derive(Args)]
+pub struct ConnectionOptions {
+    #[arg(short, long, env, hide_env = true, value_name = "PATH")]
+    /// The device to connect to
     pub device: Option<String>,
+
+    #[arg(short, long, default_value = "32")]
+    /// Set the size of the buffer used to send data. Setting it to 0 writes
+    /// everything all at once
     pub chunk_size: usize,
+
+    #[arg(short, long, default_value = "false")]
+    /// Operate quietly
     pub quiet: bool,
 }
 
-fn connect(opts: &MainOptions) -> Focus {
+fn connect(opts: &ConnectionOptions) -> Focus {
     let device_path = match &opts.device {
         Some(d) => d.to_string(),
         None => kaleidoscope_focus::find_devices().expect("No supported device found")[0].clone(),

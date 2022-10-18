@@ -16,20 +16,23 @@
 use clap::Args;
 use indicatif::ProgressBar;
 
-use crate::commands::{connect, MainOptions};
+use crate::commands::{connect, ConnectionOptions};
 
 #[derive(Args)]
 pub struct Send {
+    #[command(flatten)]
+    pub shared: ConnectionOptions,
+
     /// The command to send
     pub command: String,
     /// Optional arguments for <COMMAND>
     pub args: Vec<String>,
 }
 
-pub fn send(opts: &Send, main_opts: MainOptions) {
-    let mut focus = connect(&main_opts);
+pub fn send(opts: &Send) {
+    let mut focus = connect(&opts.shared);
 
-    let pb = if !opts.args.is_empty() && !main_opts.quiet {
+    let pb = if !opts.args.is_empty() && !opts.shared.quiet {
         ProgressBar::new(100)
     } else {
         ProgressBar::hidden()
