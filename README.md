@@ -11,7 +11,7 @@
 [![Latest development builds][badge:development]][build:dev]
 
  [badge:development]: https://img.shields.io/github/v/release/keyboardio/kaleidoscope-focus.rs?include_prereleases&label=Development&style=for-the-badge
- [build:dev]: https://github.com/keyboardio/kaleidoscope-focus.rs/releases/tag/v0.1.0-snapshot
+ [build:dev]: https://github.com/keyboardio/kaleidoscope-focus.rs/releases/tag/latest
 
 ## Included tools
 
