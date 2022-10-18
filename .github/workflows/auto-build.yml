@@ -115,7 +115,7 @@ jobs:
 
       - name: Snapshot release
         if: github.ref_type == 'branch'
-        uses: anton-yurchenko/git-release@v5
+        uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
           UNRELEASED: "update"
@@ -125,7 +125,7 @@ jobs:
 
       - name: Release
         if: github.ref_type == 'tag'
-        uses: anton-yurchenko/git-release@v5
+        uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
         with:
