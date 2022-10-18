@@ -39,8 +39,8 @@ fn main() {
             chunk_size: 32,
             quiet: true,
         },
-        command: opts.command.to_string(),
-        args: opts.args.clone(),
+        command: opts.command,
+        args: opts.args,
     };
 
     commands::send(&send_opts);
