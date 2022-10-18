@@ -49,7 +49,7 @@ impl Focus {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0")
@@ -75,7 +75,7 @@ impl Focus {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
@@ -85,7 +85,7 @@ impl Focus {
     /// # }
     /// ```
     ///
-    /// ```rust
+    /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # use indicatif::ProgressBar;
     /// # fn main() -> Result<(), std::io::Error> {
@@ -135,7 +135,7 @@ impl Focus {
     /// return an empty string if the command is unknown, or if it had no
     /// output.
     ///
-    /// ```rust
+    /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
@@ -181,7 +181,7 @@ impl Focus {
     /// Sends an empty command, and then waits until the keyboard stops sending
     /// data. The intended use is to clear any pending I/O operations in flight.
     ///
-    /// ```rust
+    /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
@@ -269,7 +269,7 @@ impl FocusBuilder<'_> {
 /// to a supported keyboard. The crate only recognises Keyboardio devices as
 /// supported keyboards.
 ///
-/// ```rust
+/// ```no_run
 /// # use kaleidoscope_focus::find_devices;
 /// let devices = find_devices().unwrap();
 /// assert!(devices.len() > 0);
