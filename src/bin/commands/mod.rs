@@ -45,7 +45,9 @@ pub struct ConnectionOptions {
 fn connect(opts: &ConnectionOptions) -> Focus {
     let device_path = match &opts.device {
         Some(d) => d.to_string(),
-        None => kaleidoscope_focus::find_devices().expect("No supported device found").remove(0)
+        None => kaleidoscope_focus::find_devices()
+            .expect("No supported device found")
+            .remove(0),
     };
 
     Focus::create(&device_path)
