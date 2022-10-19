@@ -167,7 +167,7 @@ impl Focus {
         &mut self,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<String, std::io::Error> {
-        let mut buffer: Vec<u8> = vec![0; 1024];
+        let mut buffer = [0; 1024];
         let mut reply = vec![];
 
         self.port.read_data_set_ready()?;
