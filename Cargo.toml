@@ -27,7 +27,7 @@ features = ["derive"]
 
 [dependencies.clap]
 version = "4.0"
-default_features = false
+default-features = false
 features = ["std", "derive", "env", "help", "usage"]
 optional = true
 
