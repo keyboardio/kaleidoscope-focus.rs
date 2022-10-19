@@ -92,7 +92,7 @@ impl Focus {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     /// let progress = ProgressBar::new(0);
     /// let request = conn.request("keymap.onlyCustom",
-    ///                            Some(vec!["1".to_string()]),
+    ///                            Some(&["1".to_string()]),
     ///                            Some(&progress));
     /// assert!(request.is_ok());
     /// #   Ok(())
@@ -101,7 +101,7 @@ impl Focus {
     pub fn request(
         &mut self,
         command: &str,
-        args: Option<Vec<String>>,
+        args: Option<&[String]>,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<(), std::io::Error> {
         let request = [vec![command.to_string()], args.unwrap_or_default()]
