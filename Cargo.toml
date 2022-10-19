@@ -32,7 +32,7 @@ features = ["std", "derive", "env", "help", "usage"]
 optional = true
 
 [features]
-default = ["build-binary"]
+default = []
 build-binary = ["indicatif", "clap", "serde", "serde_json"]
 
 [[bin]]
