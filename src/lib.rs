@@ -182,6 +182,8 @@ impl Focus {
 
         loop {
             match self.port.read(buffer.as_mut_slice()) {
+                // EOF
+                Ok(0) => break,
                 Ok(t) => {
                     reply.extend(&buffer[..t]);
                     if let Some(pr) = progress_report {
