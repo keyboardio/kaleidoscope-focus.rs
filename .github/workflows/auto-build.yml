@@ -49,17 +49,15 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: Install Rust (Linux)
-        if: runner.os == 'Linux'
+      - name: Install Rust
         run: |
           rustup toolchain install stable
           rustup default stable
 
-      - name: Install Rust (macOS/Windows)
-        if: runner.os != 'Linux'
+      - name: Install Additional targets (macOS)
+        if: runner.os == 'macOS'
         run: |
-          rustup toolchain install stable
-          rustup default stable
+          rustup target add aarch64-apple-darwin
 
       - name: Install dependencies
         if: runner.os == 'Linux'
@@ -70,6 +68,10 @@ jobs:
 
       - name: Build
         run: cargo build --release -F build-binary
+
+      - name: Build (aarch64-darwin)
+        if: runner.os == 'macOS'
+        run: cargo build --release -F build-binary --target aarch64-apple-darwin
 
       - name: Prepare compressed binary (Linux)
         if: runner.os == 'Linux'
@@ -84,6 +86,9 @@ jobs:
           tar -cf - target/release/focus-send \
                     target/release/focus | \
               xz -c > target/release/kaleidoscope-focus.macOS_amd64.tar.xz
+          tar -cf - target/aarch64-apple-darwin/release/focus-send \
+                    target/aarch64-apple-darwin/release/focus | \
+              xz -c > target/release/kaleidoscope-focus.macOS_aarch64.tar.xz
 
       - name: Prepare compressed binary (Windows)
         if: runner.os == 'Windows'
