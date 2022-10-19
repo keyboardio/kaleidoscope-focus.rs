@@ -104,10 +104,7 @@ impl Focus {
         args: Option<&[String]>,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<(), std::io::Error> {
-        let request = [vec![command.to_string()], args.unwrap_or_default()]
-            .concat()
-            .join(" ")
-            + "\n";
+        let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
         if let Some(pr) = progress_report {
