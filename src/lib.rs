@@ -361,7 +361,7 @@ pub fn find_devices() -> Option<Vec<String>> {
 /// See [`Focus.request`] for an example.
 ///
 /// The crate provides an implementation of the trait for
-/// [`indicatif::ProgressBar`].
+/// [`indicatif::ProgressBar`], if the `indicatif` feature is enabled.
 pub trait ProgressReport {
     #[allow(missing_docs)]
     fn reset(&self, length: usize);
@@ -369,6 +369,7 @@ pub trait ProgressReport {
     fn progress(&self, delta: usize);
 }
 
+#[cfg(feature = "indicatif")]
 impl ProgressReport for indicatif::ProgressBar {
     fn reset(&self, length: usize) {
         self.set_position(0);
