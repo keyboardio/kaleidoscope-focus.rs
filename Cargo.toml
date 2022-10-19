@@ -8,6 +8,9 @@ homepage = "https://github.com/keyboardio/kaleidoscope-focus.rs"
 repository = "https://github.com/keyboardio/kaleidoscope-focus.rs"
 edition = "2021"
 rust-version = "1.59.0"
+exclude = [
+  ".github/*",
+]
 
 [dependencies]
 serialport = "4.2"
