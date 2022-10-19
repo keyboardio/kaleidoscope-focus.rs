@@ -39,7 +39,7 @@ pub fn send(opts: &Send) {
     };
     focus.flush().unwrap();
     focus
-        .request(&opts.command, Some(opts.args.clone()), Some(&pb))
+        .request(&opts.command, Some(&opts.args), Some(&pb))
         .expect("failed to send the request to the keyboard");
     pb.finish_and_clear();
 

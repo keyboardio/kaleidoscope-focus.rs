@@ -93,7 +93,7 @@ impl Focus {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     /// let progress = ProgressBar::new(0);
     /// let request = conn.request("keymap.onlyCustom",
-    ///                            Some(vec!["1".to_string()]),
+    ///                            Some(&["1".to_string()]),
     ///                            Some(&progress));
     /// assert!(request.is_ok());
     /// #   Ok(())
@@ -102,13 +102,10 @@ impl Focus {
     pub fn request(
         &mut self,
         command: &str,
-        args: Option<Vec<String>>,
+        args: Option<&[String]>,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<(), std::io::Error> {
-        let request = [vec![command.to_string()], args.unwrap_or_default()]
-            .concat()
-            .join(" ")
-            + "\n";
+        let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
         if let Some(pr) = progress_report {
@@ -171,7 +168,7 @@ impl Focus {
         &mut self,
         progress_report: Option<&dyn ProgressReport>,
     ) -> Result<String, std::io::Error> {
-        let mut buffer: Vec<u8> = vec![0; 1024];
+        let mut buffer = [0; 1024];
         let mut reply = vec![];
 
         self.port.read_data_set_ready()?;
@@ -183,6 +180,8 @@ impl Focus {
 
         loop {
             match self.port.read(buffer.as_mut_slice()) {
+                // EOF
+                Ok(0) => break,
                 Ok(t) => {
                     reply.extend(&buffer[..t]);
                     if let Some(pr) = progress_report {
@@ -201,7 +200,6 @@ impl Focus {
         }
 
         Ok(String::from_utf8_lossy(&reply)
-            .to_string()
             .lines()
             .filter(|l| !l.is_empty() && *l != ".")
             .collect::<Vec<&str>>()

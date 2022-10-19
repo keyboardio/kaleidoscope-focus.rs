@@ -44,7 +44,7 @@ pub fn restore(opts: &Restore) {
         progress.set_message(k.clone());
         if let Some(v) = backup.commands.get(k) {
             focus
-                .request(k, Some(vec![v.to_string()]), Some(&progress))
+                .request(k, Some(&[v.to_string()]), Some(&progress))
                 .expect("Restoration failed");
             focus
                 .read_reply(Some(&progress))
