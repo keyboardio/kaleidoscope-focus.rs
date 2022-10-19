@@ -199,7 +199,6 @@ impl Focus {
         }
 
         Ok(String::from_utf8_lossy(&reply)
-            .to_string()
             .lines()
             .filter(|l| !l.is_empty() && *l != ".")
             .collect::<Vec<&str>>()
