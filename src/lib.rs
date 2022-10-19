@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #![warn(missing_docs)]
+#![allow(rustdoc::broken_intra_doc_links)]
 
 //! **Talking to [`Kaleidoscope`] powered devices with Rust**
 //!
@@ -362,6 +363,8 @@ pub fn find_devices() -> Option<Vec<String>> {
 ///
 /// The crate provides an implementation of the trait for
 /// [`indicatif::ProgressBar`], if the `indicatif` feature is enabled.
+///
+/// [`Focus.request`]: struct.Focus.html#method.request
 pub trait ProgressReport {
     #[allow(missing_docs)]
     fn reset(&self, length: usize);
