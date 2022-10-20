@@ -42,11 +42,11 @@ pub fn backup(opts: &Backup) {
             .with_style(ProgressStyle::with_template("{spinner} backing up: {msg}").unwrap())
     };
 
-    focus.flush().unwrap();
-    focus
-        .request("backup", None, Some(&progress))
-        .expect("Failed to request backup eligible commands");
     let reply = focus
+        .flush()
+        .unwrap()
+        .request("backup", None, Some(&progress))
+        .expect("Failed to request backup eligible commands")
         .read_reply(Some(&progress))
         .expect("failed to read the list of backup eligible commands");
 
@@ -103,10 +103,9 @@ pub fn backup(opts: &Backup) {
     };
     backup_commands.iter().for_each(|cmd| {
         progress.set_message(cmd.to_string());
-        focus
-            .request(cmd, None, Some(&progress))
-            .expect("Failed to send command");
         let reply = focus
+            .request(cmd, None, Some(&progress))
+            .expect("Failed to send command")
             .read_reply(Some(&progress))
             .expect("Failed to read a reply");
         if !reply.is_empty() {

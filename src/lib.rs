@@ -72,7 +72,7 @@ impl Focus {
     ///
     /// Sends a `command` request to the keyboard, with optional `args`, and
     /// with optional progress reporting via `progress_report`. Does not wait or
-    /// read for a reply.
+    /// read for a reply, but returns a Result with a mutable self reference.
     ///
     /// # Examples
     ///
@@ -104,7 +104,7 @@ impl Focus {
         command: &str,
         args: Option<&[String]>,
         progress_report: Option<&dyn ProgressReport>,
-    ) -> Result<(), std::io::Error> {
+    ) -> Result<&mut Self, std::io::Error> {
         let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
@@ -127,7 +127,7 @@ impl Focus {
             }
         }
 
-        Ok(())
+        Ok(self)
     }
 
     /// Reads a reply from the keyboard.
@@ -144,8 +144,9 @@ impl Focus {
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// conn.request("settings.version", None, None);
-    /// let reply = conn.read_reply(None)?;
+    /// let reply = conn
+    ///     .request("settings.version", None, None)?
+    ///     .read_reply(None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
@@ -222,16 +223,16 @@ impl Focus {
     /// conn.flush()?;
     ///
     /// /// ...and then send the request we want the output of.
-    /// conn.request("settings.version", None, None)?;
-    /// let reply = conn.read_reply(None)?;
+    /// let reply = conn
+    ///     .request("settings.version", None, None)?
+    ///     .read_reply(None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn flush(&mut self) -> Result<(), std::io::Error> {
-        self.request(" ", None, None)?;
-        self.read_reply(None)?;
-        Ok(())
+    pub fn flush(&mut self) -> Result<&mut Self, std::io::Error> {
+        self.request(" ", None, None)?.read_reply(None)?;
+        Ok(self)
     }
 
     fn wait_for_data(&mut self) -> Result<(), std::io::Error> {

@@ -37,13 +37,15 @@ pub fn send(opts: &Send) {
     } else {
         ProgressBar::hidden()
     };
-    focus.flush().unwrap();
-    focus
+    let reply = focus
+        .flush()
+        .unwrap()
         .request(&opts.command, Some(&opts.args), Some(&pb))
-        .expect("failed to send the request to the keyboard");
+        .expect("failed to send the request to the keyboard")
+        .read_reply(Some(&pb))
+        .expect("failed to read the reply");
     pb.finish_and_clear();
 
-    let reply = focus.read_reply(None).expect("failed to read the reply");
     if !reply.is_empty() {
         println!("{}", reply);
     }
