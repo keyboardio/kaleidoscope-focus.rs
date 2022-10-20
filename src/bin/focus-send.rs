@@ -43,5 +43,5 @@ fn main() {
         args: opts.args,
     };
 
-    commands::send(&send_opts);
+    commands::send(&send_opts).expect("Error communicating with the keyboard");
 }

@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use anyhow::Result;
 use clap::Args;
 use indicatif::ProgressBar;
 
@@ -29,7 +30,7 @@ pub struct Send {
     pub args: Vec<String>,
 }
 
-pub fn send(opts: &Send) {
+pub fn send(opts: &Send) -> Result<()> {
     let mut focus = connect(&opts.shared);
 
     let pb = if !opts.args.is_empty() && !opts.shared.quiet {
@@ -38,15 +39,14 @@ pub fn send(opts: &Send) {
         ProgressBar::hidden()
     };
     let reply = focus
-        .flush()
-        .unwrap()
-        .request(&opts.command, Some(&opts.args), Some(&pb))
-        .expect("failed to send the request to the keyboard")
-        .read_reply(Some(&pb))
-        .expect("failed to read the reply");
+        .flush()?
+        .request(&opts.command, Some(&opts.args), Some(&pb))?
+        .read_reply(Some(&pb))?;
     pb.finish_and_clear();
 
     if !reply.is_empty() {
         println!("{}", reply);
     }
+
+    Ok(())
 }

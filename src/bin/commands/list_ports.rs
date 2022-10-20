@@ -13,12 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use anyhow::Result;
+
 #[allow(dead_code)]
-pub fn list_ports() {
+pub fn list_ports() -> Result<(), anyhow::Error> {
     kaleidoscope_focus::find_devices()
         .expect("No supported devices found")
         .iter()
         .for_each(|device| {
             println!("{}", device);
         });
+    Ok(())
 }

@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use anyhow::Result;
 use clap::Args;
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,7 @@ pub struct Backup {
 }
 
 #[allow(dead_code)]
-pub fn backup(opts: &Backup) {
+pub fn backup(opts: &Backup) -> Result<()> {
     let mut focus = connect(&opts.shared);
     let progress = if opts.shared.quiet {
         ProgressBar::hidden()
@@ -43,12 +44,9 @@ pub fn backup(opts: &Backup) {
     };
 
     let reply = focus
-        .flush()
-        .unwrap()
-        .request("backup", None, Some(&progress))
-        .expect("Failed to request backup eligible commands")
-        .read_reply(Some(&progress))
-        .expect("failed to read the list of backup eligible commands");
+        .flush()?
+        .request("backup", None, Some(&progress))?
+        .read_reply(Some(&progress))?;
 
     let mut backup_commands: Vec<&str> = reply.lines().collect();
     if backup_commands.is_empty() {
@@ -101,21 +99,20 @@ pub fn backup(opts: &Backup) {
         commands: HashMap::new(),
         restore: backup_commands.iter().map(|cmd| cmd.to_string()).collect(),
     };
-    backup_commands.iter().for_each(|cmd| {
+    for cmd in &backup_commands {
         progress.set_message(cmd.to_string());
         let reply = focus
-            .request(cmd, None, Some(&progress))
-            .expect("Failed to send command")
-            .read_reply(Some(&progress))
-            .expect("Failed to read a reply");
+            .request(cmd, None, Some(&progress))?
+            .read_reply(Some(&progress))?;
         if !reply.is_empty() {
             backup.commands.insert(cmd.to_string(), reply);
         } else {
             backup.restore.retain(|x| x != cmd);
         }
         progress.inc(1);
-    });
+    }
     progress.finish_and_clear();
 
-    println!("{}", serde_json::to_string(&backup).unwrap());
+    println!("{}", serde_json::to_string(&backup)?);
+    Ok(())
 }

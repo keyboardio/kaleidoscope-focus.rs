@@ -47,4 +47,5 @@ fn main() {
         Commands::Backup(b) => commands::backup(b),
         Commands::Restore(r) => commands::restore(r),
     }
+    .expect("Error communicating with the keyboard");
 }

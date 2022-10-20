@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use anyhow::Result;
 use clap::Args;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io;
@@ -27,7 +28,7 @@ pub struct Restore {
 }
 
 #[allow(dead_code)]
-pub fn restore(opts: &Restore) {
+pub fn restore(opts: &Restore) -> Result<()> {
     let backup: BackupData =
         serde_json::from_reader(io::stdin()).expect("Unable to parse the backup");
 
@@ -40,16 +41,16 @@ pub fn restore(opts: &Restore) {
             .with_style(ProgressStyle::with_template("{spinner} restoring: {msg}").unwrap())
     };
 
-    backup.restore.iter().for_each(|k| {
+    for k in &backup.restore {
         progress.set_message(k.clone());
         if let Some(v) = backup.commands.get(k) {
             focus
-                .request(k, Some(&[v.to_string()]), Some(&progress))
-                .expect("Restoration failed")
-                .read_reply(Some(&progress))
-                .expect("Restoration failed");
+                .request(k, Some(&[v.to_string()]), Some(&progress))?
+                .read_reply(Some(&progress))?;
         }
         progress.inc(1);
-    });
+    }
     progress.finish_and_clear();
+
+    Ok(())
 }
