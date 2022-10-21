@@ -76,27 +76,23 @@ jobs:
       - name: Prepare compressed binary (Linux)
         if: runner.os == 'Linux'
         run: |
-          tar -cf - target/release/focus-send \
-                    target/release/focus | \
+          tar -cf - -C target/release focus-send focus | \
               xz -c > target/release/kaleidoscope-focus.linux_amd64.tar.xz
 
       - name: Prepare compressed binary (macOS)
         if: runner.os == 'macOS'
         run: |
-          tar -cf - target/release/focus-send \
-                    target/release/focus | \
+          tar -cf - -C target/release focus-send focus | \
               xz -c > target/release/kaleidoscope-focus.macOS_amd64.tar.xz
-          tar -cf - target/aarch64-apple-darwin/release/focus-send \
-                    target/aarch64-apple-darwin/release/focus | \
+          tar -cf - -C target/aarch64-apple-darwin/release focus-send focus | \
               xz -c > target/release/kaleidoscope-focus.macOS_aarch64.tar.xz
 
       - name: Prepare compressed binary (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          tar -cf - target/release/focus-send \
-                    target/release/focus | \
-              xz -c > target/release/kaleidoscope-focus.windows_amd64.tar.xz
+          cd target/release && \
+          7z a -tzip kaleidoscope-focus.windows_amd64.zip focus-send.exe focus.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -104,6 +100,7 @@ jobs:
           name: ${{ runner.os }}-artifact
           path: |
             target/release/*.xz
+            target/release/*.zip
 
   publish:
     needs: build
@@ -126,7 +123,7 @@ jobs:
           UNRELEASED: "update"
           RELEASE_NAME_SUFFIX: " (snapshot build)"
         with:
-          args: artifacts/*/*.xz
+          args: artifacts/*/*.xz artifacts/*/*.zip
 
       - name: Release
         if: github.ref_type == 'tag'
@@ -134,4 +131,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
         with:
-          args: artifacts/*/*.xz
+          args: artifacts/*/*.xz artifacts/*/*.zip
