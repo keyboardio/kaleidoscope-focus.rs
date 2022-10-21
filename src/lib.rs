@@ -40,6 +40,7 @@ pub struct Focus {
     port: Box<dyn SerialPort>,
     chunk_size: usize,
     interval: u64,
+    progress_report: Option<Box<dyn ProgressReport>>,
 }
 
 impl Focus {
@@ -68,11 +69,29 @@ impl Focus {
         }
     }
 
+    /// Set the progress reporter for the duration of the connection.
+    ///
+    /// ```no_run
+    /// # use kaleidoscope_focus::Focus;
+    /// # use indicatif::ProgressBar;
+    /// # fn main() -> Result<(), std::io::Error> {
+    /// let pb = ProgressBar::new(0);
+    /// let mut conn = Focus::create("/dev/ttyACM0")
+    ///     .open()?.with_progress_report(Box::new(pb));
+    /// let reply = conn.command("version");
+    /// assert!(reply.is_ok());
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn with_progress_report(mut self, pr: Box<dyn ProgressReport>) -> Self {
+        self.progress_report = Some(pr);
+        self
+    }
+
     /// Send a request to the keyboard.
     ///
-    /// Sends a `command` request to the keyboard, with optional `args`, and
-    /// with optional progress reporting via `progress_report`. Returns the
-    /// reply to the request.
+    /// Sends a `command` request to the keyboard, with optional `args`. Returns
+    /// the reply to the request.
     ///
     /// May return an empty string if the command is unknown, or if it does not
     /// have any output.
@@ -83,7 +102,7 @@ impl Focus {
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// let reply = conn.request("help", None, None);
+    /// let reply = conn.request("help", None);
     /// assert!(reply.is_ok());
     /// #   Ok(())
     /// # }
@@ -93,9 +112,10 @@ impl Focus {
     /// # use kaleidoscope_focus::Focus;
     /// # use indicatif::ProgressBar;
     /// # fn main() -> Result<(), std::io::Error> {
-    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     /// let progress = ProgressBar::new(0);
-    /// let reply = conn.request("settings.version", None, Some(&progress))?;
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?
+    ///     .with_progress_report(Box::new(progress));
+    /// let reply = conn.request("settings.version", None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
@@ -104,7 +124,6 @@ impl Focus {
         &mut self,
         command: &str,
         args: Option<&[String]>,
-        progress_report: Option<&dyn ProgressReport>,
     ) -> Result<String, std::io::Error> {
         // *********************
         // * Write the request *
@@ -113,7 +132,7 @@ impl Focus {
         let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
-        if let Some(pr) = progress_report {
+        if let Some(pr) = &self.progress_report {
             pr.reset(request.len());
         }
 
@@ -121,13 +140,13 @@ impl Focus {
             for c in request.as_bytes().chunks(self.chunk_size) {
                 self.port.write_all(c)?;
                 thread::sleep(Duration::from_millis(self.interval));
-                if let Some(pr) = progress_report {
+                if let Some(pr) = &self.progress_report {
                     pr.progress(c.len());
                 }
             }
         } else {
             self.port.write_all(request.as_bytes())?;
-            if let Some(pr) = progress_report {
+            if let Some(pr) = &self.progress_report {
                 pr.progress(request.len());
             }
         }
@@ -142,7 +161,7 @@ impl Focus {
         self.port.read_data_set_ready()?;
         self.wait_for_data()?;
 
-        if let Some(pr) = progress_report {
+        if let Some(pr) = &self.progress_report {
             pr.reset(0);
         }
 
@@ -152,7 +171,7 @@ impl Focus {
                 Ok(0) => break,
                 Ok(t) => {
                     reply.extend(&buffer[..t]);
-                    if let Some(pr) = progress_report {
+                    if let Some(pr) = &self.progress_report {
                         pr.progress(t);
                     }
                 }
@@ -174,6 +193,23 @@ impl Focus {
             .join("\n"))
     }
 
+    /// Send a command - a request without arguments - to the keyboard.
+    ///
+    /// See [`Focus::request`], this is the same, but without any arguments.
+    ///
+    /// ```no_run
+    /// # use kaleidoscope_focus::Focus;
+    /// # fn main() -> Result<(), std::io::Error> {
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
+    /// let reply = conn.command("settings.version")?;
+    /// assert_eq!(reply, "1 ");
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn command(&mut self, command: &str) -> Result<String, std::io::Error> {
+        self.request(command, None)
+    }
+
     /// Flush any pending data.
     ///
     /// Sends an empty command, and then waits until the keyboard stops sending
@@ -185,18 +221,18 @@ impl Focus {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     ///
     /// /// Send a request whose output we're not interested in.
-    /// conn.request("help", None, None)?;
+    /// conn.command("help")?;
     /// /// Flush it!
     /// conn.flush()?;
     ///
     /// /// ...and then send the request we want the output of.
-    /// let reply = conn.request("settings.version", None, None)?;
+    /// let reply = conn.command("settings.version")?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
     pub fn flush(&mut self) -> Result<&mut Self, std::io::Error> {
-        self.request(" ", None, None)?;
+        self.command(" ")?;
         Ok(self)
     }
 
@@ -255,6 +291,7 @@ impl FocusBuilder<'_> {
             port,
             chunk_size: self.chunk_size,
             interval: self.interval,
+            progress_report: None,
         })
     }
 }
@@ -323,12 +360,10 @@ pub fn find_devices() -> Option<Vec<String>> {
 
 /// A trait used to implement progress reporting.
 ///
-/// See [`Focus.request`] for an example.
+/// See [`Focus::request_with_progress`] for an example.
 ///
 /// The crate provides an implementation of the trait for
 /// [`indicatif::ProgressBar`], if the `indicatif` feature is enabled.
-///
-/// [`Focus.request`]: struct.Focus.html#method.request
 pub trait ProgressReport {
     #[allow(missing_docs)]
     fn reset(&self, length: usize);

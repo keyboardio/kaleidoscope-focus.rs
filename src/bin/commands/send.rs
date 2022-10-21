@@ -31,16 +31,14 @@ pub struct Send {
 }
 
 pub fn send(opts: &Send) -> Result<()> {
-    let mut focus = connect(&opts.shared);
-
     let pb = if !opts.args.is_empty() && !opts.shared.quiet {
         ProgressBar::new(100)
     } else {
         ProgressBar::hidden()
     };
-    let reply = focus
-        .flush()?
-        .request(&opts.command, Some(&opts.args), Some(&pb))?;
+    let mut focus = connect(&opts.shared).with_progress_report(Box::new(pb.clone()));
+
+    let reply = focus.flush()?.request(&opts.command, Some(&opts.args))?;
     pb.finish_and_clear();
 
     if !reply.is_empty() {

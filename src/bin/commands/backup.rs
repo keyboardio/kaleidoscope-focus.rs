@@ -35,15 +35,15 @@ pub struct Backup {
 
 #[allow(dead_code)]
 pub fn backup(opts: &Backup) -> Result<()> {
-    let mut focus = connect(&opts.shared);
     let progress = if opts.shared.quiet {
         ProgressBar::hidden()
     } else {
         ProgressBar::new(0)
             .with_style(ProgressStyle::with_template("{spinner} backing up: {msg}").unwrap())
     };
+    let mut focus = connect(&opts.shared).with_progress_report(Box::new(progress.clone()));
 
-    let reply = focus.flush()?.request("backup", None, Some(&progress))?;
+    let reply = focus.flush()?.command("backup")?;
 
     let mut backup_commands: Vec<&str> = reply.lines().collect();
     if backup_commands.is_empty() {
@@ -98,7 +98,7 @@ pub fn backup(opts: &Backup) -> Result<()> {
     };
     for cmd in &backup_commands {
         progress.set_message(cmd.to_string());
-        let reply = focus.request(cmd, None, Some(&progress))?;
+        let reply = focus.command(cmd)?;
         if !reply.is_empty() {
             backup.commands.insert(cmd.to_string(), reply);
         } else {
