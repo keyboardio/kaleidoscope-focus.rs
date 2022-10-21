@@ -31,7 +31,7 @@ pub struct Send {
 }
 
 pub fn send(opts: &Send) -> Result<()> {
-    let pb = if !opts.args.is_empty() && !opts.shared.quiet {
+    let pb = if !opts.shared.quiet {
         ProgressBar::new(100)
     } else {
         ProgressBar::hidden()
