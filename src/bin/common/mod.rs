@@ -47,7 +47,7 @@ impl Cli {
     pub fn connect(opts: ConnectionOptions) -> Self {
         let device_path = match &opts.device {
             Some(d) => d.to_string(),
-            None => kaleidoscope_focus::find_devices()
+            None => Focus::find_devices()
                 .expect("No supported device found")
                 .remove(0),
         };
@@ -86,7 +86,7 @@ impl Cli {
     }
 
     pub fn list_ports() -> Result<()> {
-        kaleidoscope_focus::find_devices()
+        Focus::find_devices()
             .expect("No supported devices found")
             .iter()
             .for_each(|device| {
