@@ -40,8 +40,7 @@ pub fn send(opts: &Send) -> Result<()> {
     };
     let reply = focus
         .flush()?
-        .request(&opts.command, Some(&opts.args), Some(&pb))?
-        .read_reply(Some(&pb))?;
+        .request(&opts.command, Some(&opts.args), Some(&pb))?;
     pb.finish_and_clear();
 
     if !reply.is_empty() {

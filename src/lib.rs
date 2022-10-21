@@ -71,8 +71,11 @@ impl Focus {
     /// Send a request to the keyboard.
     ///
     /// Sends a `command` request to the keyboard, with optional `args`, and
-    /// with optional progress reporting via `progress_report`. Does not wait or
-    /// read for a reply, but returns a Result with a mutable self reference.
+    /// with optional progress reporting via `progress_report`. Returns the
+    /// reply to the request.
+    ///
+    /// May return an empty string if the command is unknown, or if it does not
+    /// have any output.
     ///
     /// # Examples
     ///
@@ -80,8 +83,8 @@ impl Focus {
     /// # use kaleidoscope_focus::Focus;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// let request = conn.request("help", None, None);
-    /// assert!(request.is_ok());
+    /// let reply = conn.request("help", None, None);
+    /// assert!(reply.is_ok());
     /// #   Ok(())
     /// # }
     /// ```
@@ -92,10 +95,8 @@ impl Focus {
     /// # fn main() -> Result<(), std::io::Error> {
     /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
     /// let progress = ProgressBar::new(0);
-    /// let request = conn.request("keymap.onlyCustom",
-    ///                            Some(&["1".to_string()]),
-    ///                            Some(&progress));
-    /// assert!(request.is_ok());
+    /// let reply = conn.request("settings.version", None, Some(&progress))?;
+    /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
@@ -104,7 +105,11 @@ impl Focus {
         command: &str,
         args: Option<&[String]>,
         progress_report: Option<&dyn ProgressReport>,
-    ) -> Result<&mut Self, std::io::Error> {
+    ) -> Result<String, std::io::Error> {
+        // *********************
+        // * Write the request *
+        // *********************
+
         let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
@@ -127,48 +132,10 @@ impl Focus {
             }
         }
 
-        Ok(self)
-    }
+        // ******************
+        // * Read the reply *
+        // ******************
 
-    /// Reads a reply from the keyboard.
-    ///
-    /// Once a command has been sent, the keyboard will reply something. May
-    /// return an empty string if the command is unknown, or if it had no
-    /// output.
-    ///
-    /// Progress reporting optional.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// # use kaleidoscope_focus::Focus;
-    /// # fn main() -> Result<(), std::io::Error> {
-    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// let reply = conn
-    ///     .request("settings.version", None, None)?
-    ///     .read_reply(None)?;
-    /// assert_eq!(reply, "1 ");
-    /// #   Ok(())
-    /// # }
-    /// ```
-    ///
-    /// ```no_run
-    /// # use kaleidoscope_focus::Focus;
-    /// # use indicatif::ProgressBar;
-    /// # fn main() -> Result<(), std::io::Error> {
-    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// let progress = ProgressBar::new(0);
-    ///
-    /// conn.request("settings.version", None, Some(&progress));
-    /// let reply = conn.read_reply(Some(&progress))?;
-    /// assert_eq!(reply, "1 ");
-    /// #   Ok(())
-    /// # }
-    /// ```
-    pub fn read_reply(
-        &mut self,
-        progress_report: Option<&dyn ProgressReport>,
-    ) -> Result<String, std::io::Error> {
         let mut buffer = [0; 1024];
         let mut reply = vec![];
 
@@ -223,15 +190,13 @@ impl Focus {
     /// conn.flush()?;
     ///
     /// /// ...and then send the request we want the output of.
-    /// let reply = conn
-    ///     .request("settings.version", None, None)?
-    ///     .read_reply(None)?;
+    /// let reply = conn.request("settings.version", None, None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
     /// # }
     /// ```
     pub fn flush(&mut self) -> Result<&mut Self, std::io::Error> {
-        self.request(" ", None, None)?.read_reply(None)?;
+        self.request(" ", None, None)?;
         Ok(self)
     }
 

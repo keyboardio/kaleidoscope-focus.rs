@@ -43,10 +43,7 @@ pub fn backup(opts: &Backup) -> Result<()> {
             .with_style(ProgressStyle::with_template("{spinner} backing up: {msg}").unwrap())
     };
 
-    let reply = focus
-        .flush()?
-        .request("backup", None, Some(&progress))?
-        .read_reply(Some(&progress))?;
+    let reply = focus.flush()?.request("backup", None, Some(&progress))?;
 
     let mut backup_commands: Vec<&str> = reply.lines().collect();
     if backup_commands.is_empty() {
@@ -101,9 +98,7 @@ pub fn backup(opts: &Backup) -> Result<()> {
     };
     for cmd in &backup_commands {
         progress.set_message(cmd.to_string());
-        let reply = focus
-            .request(cmd, None, Some(&progress))?
-            .read_reply(Some(&progress))?;
+        let reply = focus.request(cmd, None, Some(&progress))?;
         if !reply.is_empty() {
             backup.commands.insert(cmd.to_string(), reply);
         } else {

@@ -44,9 +44,7 @@ pub fn restore(opts: &Restore) -> Result<()> {
     for k in &backup.restore {
         progress.set_message(k.clone());
         if let Some(v) = backup.commands.get(k) {
-            focus
-                .request(k, Some(&[v.to_string()]), Some(&progress))?
-                .read_reply(Some(&progress))?;
+            focus.request(k, Some(&[v.to_string()]), Some(&progress))?;
         }
         progress.inc(1);
     }
