@@ -15,12 +15,12 @@
 
 use clap::Parser;
 
-mod commands;
-use crate::commands::{send::Send, ConnectionOptions};
+mod common;
+use crate::common::{Cli, ConnectionOptions};
 
 #[derive(Parser)]
 #[command(version, about)]
-struct Cli {
+struct Options {
     #[arg(short, long, env, hide_env = true, value_name = "PATH")]
     /// The device to connect to
     device: Option<String>,
@@ -32,16 +32,14 @@ struct Cli {
 }
 
 fn main() {
-    let opts = Cli::parse();
-    let send_opts = Send {
-        shared: ConnectionOptions {
-            device: opts.device,
-            chunk_size: 32,
-            quiet: true,
-        },
-        command: opts.command,
-        args: opts.args,
-    };
+    let opts = Options::parse();
 
-    commands::send(&send_opts).expect("Error communicating with the keyboard");
+    let mut cli = Cli::connect(ConnectionOptions {
+        device: opts.device,
+        chunk_size: 32,
+        quiet: true,
+    });
+
+    cli.send(&opts.command, &opts.args)
+        .expect("Error communicating with the keyboard");
 }

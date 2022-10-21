@@ -13,14 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 
-mod commands;
-use crate::commands::{backup::Backup, restore::Restore, send::Send};
+mod common;
+use crate::common::{Cli, ConnectionOptions};
 
 #[derive(Parser)]
 #[command(version, about)]
-struct Cli {
+struct Options {
     #[command(subcommand)]
     command: Commands,
 }
@@ -33,19 +33,30 @@ enum Commands {
     /// Send a request to the keyboard, and display the reply
     Send(Send),
     /// Create a backup of the keyboards configuration
-    Backup(Backup),
+    Backup(ConnectionOptions),
     /// Restore the keyboards configuration from backup
-    Restore(Restore),
+    Restore(ConnectionOptions),
+}
+
+#[derive(Args)]
+pub struct Send {
+    #[command(flatten)]
+    pub shared: ConnectionOptions,
+
+    /// The command to send
+    pub command: String,
+    /// Optional arguments for <COMMAND>
+    pub args: Vec<String>,
 }
 
 fn main() {
-    let opts = Cli::parse();
+    let opts = Options::parse();
 
-    match &opts.command {
-        Commands::ListPorts => commands::list_ports(),
-        Commands::Send(s) => commands::send(s),
-        Commands::Backup(b) => commands::backup(b),
-        Commands::Restore(r) => commands::restore(r),
+    match opts.command {
+        Commands::ListPorts => Cli::list_ports(),
+        Commands::Send(s) => Cli::connect(s.shared).send(&s.command, &s.args),
+        Commands::Backup(o) => Cli::connect(o).backup(),
+        Commands::Restore(o) => Cli::connect(o).restore(),
     }
     .expect("Error communicating with the keyboard");
 }
