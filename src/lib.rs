@@ -132,10 +132,6 @@ impl Focus {
         let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
-        if let Some(pr) = &self.progress_report {
-            pr.reset(request.len());
-        }
-
         if self.chunk_size > 0 {
             for c in request.as_bytes().chunks(self.chunk_size) {
                 self.port.write_all(c)?;
@@ -160,10 +156,6 @@ impl Focus {
 
         self.port.read_data_set_ready()?;
         self.wait_for_data()?;
-
-        if let Some(pr) = &self.progress_report {
-            pr.reset(0);
-        }
 
         loop {
             match self.port.read(buffer.as_mut_slice()) {
@@ -366,17 +358,11 @@ pub fn find_devices() -> Option<Vec<String>> {
 /// [`indicatif::ProgressBar`], if the `indicatif` feature is enabled.
 pub trait ProgressReport {
     #[allow(missing_docs)]
-    fn reset(&self, length: usize);
-    #[allow(missing_docs)]
     fn progress(&self, delta: usize);
 }
 
 #[cfg(feature = "indicatif")]
 impl ProgressReport for indicatif::ProgressBar {
-    fn reset(&self, length: usize) {
-        self.set_position(0);
-        self.set_length(length.try_into().unwrap());
-    }
     fn progress(&self, delta: usize) {
         self.inc(delta.try_into().unwrap());
     }
