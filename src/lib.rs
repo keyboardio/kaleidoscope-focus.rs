@@ -69,92 +69,6 @@ impl Focus {
         }
     }
 
-    /// Find supported devices, and return the paths to their ports.
-    ///
-    /// Iterates over available USB serial ports, and keeps only those that belong
-    /// to a supported keyboard. The crate only recognises Keyboardio devices as
-    /// supported keyboards.
-    ///
-    /// ```no_run
-    /// # use kaleidoscope_focus::Focus;
-    /// let devices = Focus::find_devices().unwrap();
-    /// assert!(devices.len() > 0);
-    /// ```
-    pub fn find_devices() -> Option<Vec<String>> {
-        #[derive(PartialEq)]
-        struct DeviceDescriptor {
-            vid: u16,
-            pid: u16,
-        }
-        impl From<&serialport::UsbPortInfo> for DeviceDescriptor {
-            fn from(port: &serialport::UsbPortInfo) -> Self {
-                Self {
-                    vid: port.vid,
-                    pid: port.pid,
-                }
-            }
-        }
-
-        let supported_keyboards = [
-            // Keyboardio Model100
-            DeviceDescriptor {
-                vid: 0x3496,
-                pid: 0x0006,
-            },
-            // Keyboardio Atreus
-            DeviceDescriptor {
-                vid: 0x1209,
-                pid: 0x2303,
-            },
-            // Keyboardio Model01
-            DeviceDescriptor {
-                vid: 0x1209,
-                pid: 0x2301,
-            },
-        ];
-
-        let devices: Vec<String> = serialport::available_ports()
-            .ok()?
-            .iter()
-            .filter_map(|p| match &p.port_type {
-                serialport::SerialPortType::UsbPort(port_info) => supported_keyboards
-                    .contains(&port_info.into())
-                    .then(|| p.port_name.to_string()),
-                _ => None,
-            })
-            .collect();
-
-        if devices.is_empty() {
-            return None;
-        }
-
-        Some(devices)
-    }
-
-    /// Set the progress reporter function for I/O operations.
-    ///
-    /// Whenever I/O happens, the progress reporter function is called. This can
-    /// be used to display progress bars and the like. The reporter function
-    /// takes a single `usize` argument, and returns nothing.
-    ///
-    /// ```no_run
-    /// # use kaleidoscope_focus::Focus;
-    /// # use indicatif::ProgressBar;
-    /// # fn main() -> Result<(), std::io::Error> {
-    /// let progress = ProgressBar::new(0);
-    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
-    /// conn.set_progress_report(move |delta| {
-    ///   progress.inc(delta.try_into().unwrap());
-    /// });
-    /// let reply = conn.command("version");
-    /// assert!(reply.is_ok());
-    /// #   Ok(())
-    /// # }
-    /// ```
-    pub fn set_progress_report(&mut self, progress_report: impl Fn(usize) + 'static) {
-        self.progress_report = Box::new(progress_report);
-    }
-
     /// Send a request to the keyboard.
     ///
     /// Sends a `command` request to the keyboard, with optional `args`. Returns
@@ -265,6 +179,30 @@ impl Focus {
         self.request(command, None)
     }
 
+    /// Set the progress reporter function for I/O operations.
+    ///
+    /// Whenever I/O happens, the progress reporter function is called. This can
+    /// be used to display progress bars and the like. The reporter function
+    /// takes a single `usize` argument, and returns nothing.
+    ///
+    /// ```no_run
+    /// # use kaleidoscope_focus::Focus;
+    /// # use indicatif::ProgressBar;
+    /// # fn main() -> Result<(), std::io::Error> {
+    /// let progress = ProgressBar::new(0);
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
+    /// conn.set_progress_report(move |delta| {
+    ///   progress.inc(delta.try_into().unwrap());
+    /// });
+    /// let reply = conn.command("version");
+    /// assert!(reply.is_ok());
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn set_progress_report(&mut self, progress_report: impl Fn(usize) + 'static) {
+        self.progress_report = Box::new(progress_report);
+    }
+
     /// Flush any pending data.
     ///
     /// Sends an empty command, and then waits until the keyboard stops sending
@@ -289,6 +227,68 @@ impl Focus {
     pub fn flush(&mut self) -> Result<&mut Self, std::io::Error> {
         self.command(" ")?;
         Ok(self)
+    }
+
+    /// Find supported devices, and return the paths to their ports.
+    ///
+    /// Iterates over available USB serial ports, and keeps only those that belong
+    /// to a supported keyboard. The crate only recognises Keyboardio devices as
+    /// supported keyboards.
+    ///
+    /// ```no_run
+    /// # use kaleidoscope_focus::Focus;
+    /// let devices = Focus::find_devices().unwrap();
+    /// assert!(devices.len() > 0);
+    /// ```
+    pub fn find_devices() -> Option<Vec<String>> {
+        #[derive(PartialEq)]
+        struct DeviceDescriptor {
+            vid: u16,
+            pid: u16,
+        }
+        impl From<&serialport::UsbPortInfo> for DeviceDescriptor {
+            fn from(port: &serialport::UsbPortInfo) -> Self {
+                Self {
+                    vid: port.vid,
+                    pid: port.pid,
+                }
+            }
+        }
+
+        let supported_keyboards = [
+            // Keyboardio Model100
+            DeviceDescriptor {
+                vid: 0x3496,
+                pid: 0x0006,
+            },
+            // Keyboardio Atreus
+            DeviceDescriptor {
+                vid: 0x1209,
+                pid: 0x2303,
+            },
+            // Keyboardio Model01
+            DeviceDescriptor {
+                vid: 0x1209,
+                pid: 0x2301,
+            },
+        ];
+
+        let devices: Vec<String> = serialport::available_ports()
+            .ok()?
+            .iter()
+            .filter_map(|p| match &p.port_type {
+                serialport::SerialPortType::UsbPort(port_info) => supported_keyboards
+                    .contains(&port_info.into())
+                    .then(|| p.port_name.to_string()),
+                _ => None,
+            })
+            .collect();
+
+        if devices.is_empty() {
+            return None;
+        }
+
+        Some(devices)
     }
 
     fn wait_for_data(&mut self) -> Result<(), std::io::Error> {
