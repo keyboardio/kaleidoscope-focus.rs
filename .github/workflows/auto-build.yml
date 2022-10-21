@@ -66,12 +66,24 @@ jobs:
       - name: Test
         run: cargo test -F build-binary
 
-      - name: Build
+      - name: Build (Linux, Windows)
+        if: runner.os != 'macOS'
         run: cargo build --release -F build-binary
 
-      - name: Build (aarch64-darwin)
+      - name: Build (macOS)
         if: runner.os == 'macOS'
-        run: cargo build --release -F build-binary --target aarch64-apple-darwin
+        run: |
+          cargo build --release -F build-binary
+          cargo build --release -F build-binary --target aarch64-apple-darwin
+          install -d target/universal-apple-darwin/release
+          lipo target/release/focus \
+               target/aarch64-apple-darwin/release/focus \
+               -create -output target/universal-apple-darwin/release/focus
+          lipo target/release/focus-send \
+               target/aarch64-apple-darwin/release/focus-send \
+               -create -output target/universal-apple-darwin/release/focus-send
+          lipo -info target/universal-apple-darwin/release/focus \
+                     target/universal-apple-darwin/release/focus-send
 
       - name: Prepare compressed binary (Linux)
         if: runner.os == 'Linux'
@@ -82,10 +94,8 @@ jobs:
       - name: Prepare compressed binary (macOS)
         if: runner.os == 'macOS'
         run: |
-          tar -cf - -C target/release focus-send focus | \
-              xz -c > target/release/kaleidoscope-focus.macOS_amd64.tar.xz
-          tar -cf - -C target/aarch64-apple-darwin/release focus-send focus | \
-              xz -c > target/release/kaleidoscope-focus.macOS_aarch64.tar.xz
+          tar -cf - -C target/universal-apple-darwin/release focus-send focus | \
+              xz -c > target/release/kaleidoscope-focus.macOS_universal.tar.xz
 
       - name: Prepare compressed binary (Windows)
         if: runner.os == 'Windows'
