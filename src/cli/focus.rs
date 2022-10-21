@@ -15,8 +15,8 @@
 
 use clap::{Args, Parser, Subcommand};
 
-mod common;
-use crate::common::{Cli, ConnectionOptions};
+mod shared;
+use crate::shared::{Cli, ConnectionOptions};
 
 #[derive(Parser)]
 #[command(version, about)]

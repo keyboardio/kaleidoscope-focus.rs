@@ -15,22 +15,20 @@ exclude = [
 [dependencies]
 serialport = "4.2"
 
+[features]
+default = []
+build-binary = ["anyhow", "clap", "indicatif", "serde", "serde_json"]
+
+[profile.release]
+strip = true
+panic = "abort"
+lto = true
+
+## Dependencies & Configuration for CLI tools
+
 [dependencies.anyhow]
 version = "1.0"
 optional = true
-
-[dependencies.indicatif]
-version = "0.17.1"
-optional = true
-
-[dependencies.serde_json]
-version = "1.0"
-optional = true
-
-[dependencies.serde]
-version = "1.0"
-optional = true
-features = ["derive"]
 
 [dependencies.clap]
 version = "4.0"
@@ -38,19 +36,25 @@ default-features = false
 features = ["std", "derive", "env", "help", "usage"]
 optional = true
 
-[features]
-default = []
-build-binary = ["indicatif", "clap", "serde", "serde_json", "anyhow"]
+[dependencies.indicatif]
+version = "0.17.1"
+optional = true
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+features = ["derive"]
+
+[dependencies.serde_json]
+version = "1.0"
+optional = true
 
 [[bin]]
 name = "focus"
+path = "src/cli/focus.rs"
 required-features = ["build-binary"]
 
 [[bin]]
 name = "focus-send"
+path = "src/cli/focus-send.rs"
 required-features = ["build-binary"]
-
-[profile.release]
-strip = true
-panic = "abort"
-lto = true
