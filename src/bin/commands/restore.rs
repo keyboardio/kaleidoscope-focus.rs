@@ -15,11 +15,10 @@
 
 use anyhow::Result;
 use clap::Args;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::io;
 
 use crate::commands::backup::BackupData;
-use crate::commands::{connect, ConnectionOptions};
+use crate::commands::{connect, set_progress, ConnectionOptions};
 
 #[derive(Args)]
 pub struct Restore {
@@ -32,13 +31,10 @@ pub fn restore(opts: &Restore) -> Result<()> {
     let backup: BackupData =
         serde_json::from_reader(io::stdin()).expect("Unable to parse the backup");
 
-    let progress = if opts.shared.quiet {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new(0)
-            .with_style(ProgressStyle::with_template("{spinner} restoring: {msg}").unwrap())
-    };
-    let mut focus = connect(&opts.shared).with_progress_report(Box::new(progress.clone()));
+    let mut focus = connect(&opts.shared);
+    let progress = set_progress(&mut focus, &opts.shared);
+
+    progress.set_prefix("restoring: ");
 
     for k in &backup.restore {
         progress.set_message(k.clone());

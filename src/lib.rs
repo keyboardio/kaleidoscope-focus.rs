@@ -40,7 +40,7 @@ pub struct Focus {
     port: Box<dyn SerialPort>,
     chunk_size: usize,
     interval: u64,
-    progress_report: Option<Box<dyn ProgressReport>>,
+    progress_report: Box<dyn Fn(usize) + 'static>,
 }
 
 impl Focus {
@@ -69,23 +69,28 @@ impl Focus {
         }
     }
 
-    /// Set the progress reporter for the duration of the connection.
+    /// Set the progress reporter function for I/O operations.
+    ///
+    /// Whenever I/O happens, the progress reporter function is called. This can
+    /// be used to display progress bars and the like. The reporter function
+    /// takes a single `usize` argument, and returns nothing.
     ///
     /// ```no_run
     /// # use kaleidoscope_focus::Focus;
     /// # use indicatif::ProgressBar;
     /// # fn main() -> Result<(), std::io::Error> {
-    /// let pb = ProgressBar::new(0);
-    /// let mut conn = Focus::create("/dev/ttyACM0")
-    ///     .open()?.with_progress_report(Box::new(pb));
+    /// let progress = ProgressBar::new(0);
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
+    /// conn.set_progress_report(move |delta| {
+    ///   progress.inc(delta.try_into().unwrap());
+    /// });
     /// let reply = conn.command("version");
     /// assert!(reply.is_ok());
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn with_progress_report(mut self, pr: Box<dyn ProgressReport>) -> Self {
-        self.progress_report = Some(pr);
-        self
+    pub fn set_progress_report(&mut self, progress_report: impl Fn(usize) + 'static) {
+        self.progress_report = Box::new(progress_report);
     }
 
     /// Send a request to the keyboard.
@@ -113,8 +118,10 @@ impl Focus {
     /// # use indicatif::ProgressBar;
     /// # fn main() -> Result<(), std::io::Error> {
     /// let progress = ProgressBar::new(0);
-    /// let mut conn = Focus::create("/dev/ttyACM0").open()?
-    ///     .with_progress_report(Box::new(progress));
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
+    /// conn.set_progress_report(move |delta| {
+    ///   progress.inc(delta.try_into().unwrap());
+    /// });
     /// let reply = conn.request("settings.version", None)?;
     /// assert_eq!(reply, "1 ");
     /// #   Ok(())
@@ -136,15 +143,11 @@ impl Focus {
             for c in request.as_bytes().chunks(self.chunk_size) {
                 self.port.write_all(c)?;
                 thread::sleep(Duration::from_millis(self.interval));
-                if let Some(pr) = &self.progress_report {
-                    pr.progress(c.len());
-                }
+                (self.progress_report)(c.len());
             }
         } else {
             self.port.write_all(request.as_bytes())?;
-            if let Some(pr) = &self.progress_report {
-                pr.progress(request.len());
-            }
+            (self.progress_report)(request.len());
         }
 
         // ******************
@@ -163,9 +166,7 @@ impl Focus {
                 Ok(0) => break,
                 Ok(t) => {
                     reply.extend(&buffer[..t]);
-                    if let Some(pr) = &self.progress_report {
-                        pr.progress(t);
-                    }
+                    (self.progress_report)(t);
                 }
                 Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
                     break;
@@ -283,7 +284,7 @@ impl FocusBuilder<'_> {
             port,
             chunk_size: self.chunk_size,
             interval: self.interval,
-            progress_report: None,
+            progress_report: Box::new(|_| {}),
         })
     }
 }
@@ -348,22 +349,4 @@ pub fn find_devices() -> Option<Vec<String>> {
     }
 
     Some(devices)
-}
-
-/// A trait used to implement progress reporting.
-///
-/// See [`Focus::request_with_progress`] for an example.
-///
-/// The crate provides an implementation of the trait for
-/// [`indicatif::ProgressBar`], if the `indicatif` feature is enabled.
-pub trait ProgressReport {
-    #[allow(missing_docs)]
-    fn progress(&self, delta: usize);
-}
-
-#[cfg(feature = "indicatif")]
-impl ProgressReport for indicatif::ProgressBar {
-    fn progress(&self, delta: usize) {
-        self.inc(delta.try_into().unwrap());
-    }
 }

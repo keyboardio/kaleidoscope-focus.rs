@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use clap::Args;
+use indicatif::{ProgressBar, ProgressStyle};
 use kaleidoscope_focus::Focus;
 
 pub mod backup;
@@ -40,6 +41,21 @@ pub struct ConnectionOptions {
     #[arg(short, long, default_value = "false")]
     /// Operate quietly
     pub quiet: bool,
+}
+
+fn set_progress(focus: &mut Focus, opts: &ConnectionOptions) -> ProgressBar {
+    let progress = if opts.quiet {
+        ProgressBar::hidden()
+    } else {
+        ProgressBar::new(0)
+            .with_style(ProgressStyle::with_template("{spinner} {prefix}{msg}").unwrap())
+    };
+
+    let cloned_progress = progress.clone();
+    focus.set_progress_report(move |delta| {
+        progress.inc(delta.try_into().unwrap());
+    });
+    cloned_progress
 }
 
 fn connect(opts: &ConnectionOptions) -> Focus {

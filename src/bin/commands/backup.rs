@@ -15,11 +15,10 @@
 
 use anyhow::Result;
 use clap::Args;
-use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::commands::{connect, ConnectionOptions};
+use crate::commands::{connect, set_progress, ConnectionOptions};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BackupData {
@@ -35,13 +34,10 @@ pub struct Backup {
 
 #[allow(dead_code)]
 pub fn backup(opts: &Backup) -> Result<()> {
-    let progress = if opts.shared.quiet {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new(0)
-            .with_style(ProgressStyle::with_template("{spinner} backing up: {msg}").unwrap())
-    };
-    let mut focus = connect(&opts.shared).with_progress_report(Box::new(progress.clone()));
+    let mut focus = connect(&opts.shared);
+    let progress = set_progress(&mut focus, &opts.shared);
+
+    progress.set_prefix("backing up: ");
 
     let reply = focus.flush()?.command("backup")?;
 

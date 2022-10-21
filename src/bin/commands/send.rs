@@ -15,9 +15,8 @@
 
 use anyhow::Result;
 use clap::Args;
-use indicatif::ProgressBar;
 
-use crate::commands::{connect, ConnectionOptions};
+use crate::commands::{connect, set_progress, ConnectionOptions};
 
 #[derive(Args)]
 pub struct Send {
@@ -31,15 +30,11 @@ pub struct Send {
 }
 
 pub fn send(opts: &Send) -> Result<()> {
-    let pb = if !opts.shared.quiet {
-        ProgressBar::new(100)
-    } else {
-        ProgressBar::hidden()
-    };
-    let mut focus = connect(&opts.shared).with_progress_report(Box::new(pb.clone()));
+    let mut focus = connect(&opts.shared);
+    let progress = set_progress(&mut focus, &opts.shared);
 
     let reply = focus.flush()?.request(&opts.command, Some(&opts.args))?;
-    pb.finish_and_clear();
+    progress.finish_and_clear();
 
     if !reply.is_empty() {
         println!("{}", reply);
