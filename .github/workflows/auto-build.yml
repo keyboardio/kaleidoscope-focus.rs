@@ -27,16 +27,16 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libudev-dev
 
       - name: Clippy
-        run: cargo clippy -F build-binary
+        run: cargo clippy
 
       - name: Format check
         run: cargo fmt --check
 
       - name: Documentation check
-        run: cargo doc -F build-binary
+        run: cargo doc
 
       - name: Documentation compile check
-        run: cargo test --doc -F build-binary
+        run: cargo test --doc
 
   build:
     runs-on: ${{ matrix.os }}
@@ -64,17 +64,17 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libudev-dev
 
       - name: Test
-        run: cargo test -F build-binary
+        run: cargo test
 
       - name: Build (Linux, Windows)
         if: runner.os != 'macOS'
-        run: cargo build --release -F build-binary
+        run: cargo build --release
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: |
-          cargo build --release -F build-binary
-          cargo build --release -F build-binary --target aarch64-apple-darwin
+          cargo build --release
+          cargo build --release --target aarch64-apple-darwin
           install -d target/universal-apple-darwin/release
           lipo target/release/focus \
                target/aarch64-apple-darwin/release/focus \
