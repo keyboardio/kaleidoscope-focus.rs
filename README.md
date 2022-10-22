@@ -16,5 +16,5 @@
 
 ## Included tools
 
-- [`focus-send`](docs/focus-send.md)
-- [`focus`](docs/focus.md)
+- [`focus-send`](kaleidoscope-focus-cli/docs/focus-send.md)
+- [`focus`](kaleidoscope-focus-cli/docs/focus.md)
