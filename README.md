@@ -8,11 +8,14 @@
 
 [![Build status][ci:badge]][ci:link]
 [![Latest release][rel:badge]][rel:link]
+[![Crates release][crate:badge]][crate:link]
 
  [ci:badge]: https://img.shields.io/github/workflow/status/keyboardio/kaleidoscope-focus.rs/Automatic%20builds?style=for-the-badge
  [ci:link]: https://github.com/keyboardio/kaleidoscope-focus.rs/actions/workflows/auto-build.yml
  [rel:badge]: https://img.shields.io/github/v/release/keyboardio/kaleidoscope-focus.rs?include_prereleases&label=Version&style=for-the-badge
  [rel:link]: https://github.com/keyboardio/kaleidoscope-focus.rs/releases/latest
+ [crate:badge]:https://img.shields.io/crates/v/kaleidoscope-focus?style=for-the-badge
+ [crate:link]: https://crates.io/crates/kaleidoscope-focus
 
 ## Included tools
 
