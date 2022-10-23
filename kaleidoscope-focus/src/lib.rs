@@ -233,6 +233,20 @@ impl Focus {
         Ok(self)
     }
 
+    /// Return the port name - if known - of the connected device.
+    ///
+    /// ```no_run
+    /// # use kaleidoscope_focus::Focus;
+    /// # fn main() -> Result<(), std::io::Error> {
+    /// let mut conn = Focus::create("/dev/ttyACM0").open()?;
+    /// assert_eq!(conn.port_name(), Some("/dev/ttyACM0".to_string()));
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn port_name(&self) -> Option<String> {
+        self.port.name()
+    }
+
     /// Find supported devices, and return the paths to their ports.
     ///
     /// Iterates over available USB serial ports, and keeps only those that belong

@@ -75,6 +75,12 @@ impl Cli {
     }
 
     pub fn send(&mut self, command: &str, args: &[String]) -> Result<()> {
+        self.progress.set_prefix(format!(
+            "sending `{}` (to {}): ",
+            &command,
+            &self.conn.port_name().unwrap()
+        ));
+
         let reply = self.conn.flush()?.request(command, Some(args))?;
         self.progress.finish_and_clear();
 
@@ -96,7 +102,10 @@ impl Cli {
     }
 
     pub fn backup(&mut self) -> Result<()> {
-        self.progress.set_prefix("backing up: ");
+        self.progress.set_prefix(format!(
+            "backing up (from {}): ",
+            &self.conn.port_name().unwrap()
+        ));
 
         let reply = self.conn.flush()?.command("backup")?;
 
@@ -171,7 +180,10 @@ impl Cli {
         let backup: BackupData =
             serde_json::from_reader(io::stdin()).expect("Unable to parse the backup");
 
-        self.progress.set_prefix("restoring: ");
+        self.progress.set_prefix(format!(
+            "restoring (to {}): ",
+            &self.conn.port_name().unwrap()
+        ));
 
         for k in &backup.restore {
             self.progress.set_message(k.clone());

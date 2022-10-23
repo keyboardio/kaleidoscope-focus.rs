@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No changes yet._
+### Added
+- Added a `port_name()` function to `kaleidoscope_focus::Focus`, which returns
+  the name of the serial port it is connected to, if available.
+- Updated the command-line tools to make use of it, and display the port name on
+  the progress indicator.
 
 ## [0.1.0] - 2022-10-23
 
