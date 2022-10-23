@@ -33,7 +33,7 @@ jobs:
         run: cargo fmt --check
 
       - name: Documentation check
-        run: cargo doc
+        run: cargo doc --no-deps
 
   build:
     runs-on: ${{ matrix.os }}
