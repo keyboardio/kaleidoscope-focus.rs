@@ -1,6 +1,6 @@
 [package]
 name = "kaleidoscope-focus"
-version = "0.1.0-snapshot"
+version = "0.1.0"
 description = "A library to talk with Kaleidoscope-powered devices using the Focus protocol"
 categories = ["hardware-support"]
 license = "GPL-3.0-only"

@@ -1,6 +1,6 @@
 [package]
 name = "kaleidoscope-focus-cli"
-version = "0.1.0-snapshot"
+version = "0.1.0"
 description = "Tiny utilities to talk with Kaleidoscope-powered devices using the Focus protocol"
 categories = ["command-line-utilities", "hardware-support"]
 license = "GPL-3.0-only"
@@ -25,7 +25,7 @@ features = ["std", "derive", "env", "help", "usage"]
 version = "0.17.1"
 
 [dependencies.kaleidoscope-focus]
-version = "0.1.0-snapshot"
+version = "0.1.0"
 path = "../kaleidoscope-focus"
 
 [dependencies.serde]
