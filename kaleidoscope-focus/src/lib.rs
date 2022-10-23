@@ -108,10 +108,14 @@ impl Focus {
         command: &str,
         args: Option<&[String]>,
     ) -> Result<String, std::io::Error> {
-        // *********************
-        // * Write the request *
-        // *********************
+        self.send(command, args)?.receive()
+    }
 
+    fn send(
+        &mut self,
+        command: &str,
+        args: Option<&[String]>,
+    ) -> Result<&mut Self, std::io::Error> {
         let request = format!("{} {}\n", command, args.unwrap_or_default().join(" "));
         self.port.write_data_terminal_ready(true)?;
 
@@ -126,10 +130,10 @@ impl Focus {
             (self.progress_report)(request.len());
         }
 
-        // ******************
-        // * Read the reply *
-        // ******************
+        Ok(self)
+    }
 
+    fn receive(&mut self) -> Result<String, std::io::Error> {
         let mut buffer = [0; 1024];
         let mut reply = vec![];
 
