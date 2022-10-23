@@ -35,9 +35,6 @@ jobs:
       - name: Documentation check
         run: cargo doc
 
-      - name: Documentation compile check
-        run: cargo test --doc
-
   build:
     runs-on: ${{ matrix.os }}
 
