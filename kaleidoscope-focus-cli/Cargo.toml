@@ -6,6 +6,7 @@ categories = ["command-line-utilities", "hardware-support"]
 license = "GPL-3.0-only"
 homepage = "https://github.com/keyboardio/kaleidoscope-focus.rs"
 repository = "https://github.com/keyboardio/kaleidoscope-focus.rs"
+default-run = "focus"
 edition = "2021"
 rust-version = "1.59.0"
 exclude = [
